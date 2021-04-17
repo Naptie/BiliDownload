@@ -16,6 +16,7 @@
 ---
 
 <h2>使用前</h2>
+
 1. 请确保您已安装 [JDK 8](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) 或更高版本。
 
 2. 如需使用音视频合并功能，请确保您已安装 [FFmpeg](http://www.ffmpeg.org)。
