@@ -17,13 +17,22 @@ import java.util.Scanner;
 
 public class Main {
 
+	private static boolean debug;
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 		long beginTime = System.currentTimeMillis();
+		debug = args.length > 0 && args[0].equalsIgnoreCase("debug");
 		File input = new File("Input.txt");
-		System.out.println("请输入一个AV号或BV号：");
-		Scanner scanner = input.exists() ? new Scanner(input) : new Scanner(System.in);
+		Scanner scanner;
+		if (input.exists() && input.length() > 0) {
+			scanner = new Scanner(input);
+			System.out.println("检测到 Input.txt，已切换输入源\n");
+		} else {
+			scanner = new Scanner(System.in);
+		}
+		System.out.println("请输入一个 AV 号或 BV 号：");
 		String id = scanner.next();
-		System.out.println("\n请输入Cookie中SESSDATA的值（若无请填“#”）：");
+		System.out.println("\n请输入 Cookie 中 SESSDATA 的值（若无请填“#”）：");
 		String sessData = scanner.next();
 		String infoUrl = "http://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id);
 		String cookie = sessData.equals("#") ? "#" : "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
@@ -36,7 +45,7 @@ public class Main {
 			info = info.getJSONObject("data");
 		}
 		System.out.println("\n标题：" + info.getString("title"));
-		System.out.println("UP主：" + info.getJSONObject("owner").getString("name"));
+		System.out.println("UP 主：" + info.getJSONObject("owner").getString("name"));
 		System.out.println("时长：" + getFormattedTime(info.getIntValue("duration"), info.getIntValue("duration") > 3600));
 		System.out.println("播放数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("view")));
 		System.out.println("弹幕数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("danmaku")));
@@ -303,9 +312,9 @@ public class Main {
 
 	private static URLConnection readUrl(String url, String cookie) throws IOException {
 		String userAgent = UserAgentManager.getUserAgent();
-//		System.out.println("正在访问 " + url + "，使用 UA “" + userAgent + "”");
-		Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1081));
-		URLConnection request = (new URL(url)).openConnection(proxy);
+		if (debug) System.out.println("正在访问 " + url + "，使用 UA “" + userAgent + "”");
+//		Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1081));
+		URLConnection request = (new URL(url)).openConnection();
 		request.setRequestProperty("User-Agent", userAgent);
 		if (!cookie.equals("#"))
 			request.setRequestProperty("Cookie", cookie);
