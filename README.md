@@ -63,7 +63,7 @@
 #ChangeLog
 
 ## 1.1.0
-###1. 解决了访问 URL 时拒绝连接的问题。([Issue #1](https://github.com/Naptie/BiliDownload/issues/1))
+###1. 解决了访问 URL 时拒绝连接的问题 ([Issue #1](https://github.com/Naptie/BiliDownload/issues/1))
 
 造成这个问题的原因很简单，就是我在 `readUrl(String url, String cookie)` 方法中写了这样一行代码：
   
@@ -71,9 +71,14 @@
   
 这直接导致了程序在访问 URL 时选择了位于1081端口的代理。因此，如果这个端口没有代理，就会提示拒绝连接。
 
-###2. 添加了 debug 模式。
+![image](https://github.com/Naptie/BiliDownload/blob/main/bin/your_debugging.jpg)
+
+###2. 添加了 Debug 模式
 
 在参数中添加 `debug`，即可启用 debug 模式。在该模式下，程序每当访问一个 URL 时，就会输出所访问的 URL 以及所使用的 UA。其中，下载视频或音频时访问的 URL 将不被输出，因为这些 URL 已经通过 `成功获取...下载地址：...` 输出了。
+
+## 1.0.0
+### Initial Commit
 
 ---
 
@@ -220,3 +225,5 @@ Fiddler 还是带来了希望。
 那一似视觉欺骗般的幻象，
 
 **将被无限重生。**
+
+![image](https://github.com/Naptie/BiliDownload/blob/main/bin/example.png)
