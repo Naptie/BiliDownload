@@ -45,7 +45,7 @@ public class Main {
 			info = info.getJSONObject("data");
 		}
 		System.out.println("\n标题：" + info.getString("title"));
-		System.out.println("UP 主：" + info.getJSONObject("owner").getString("name"));
+		System.out.println("UP主：" + info.getJSONObject("owner").getString("name"));
 		System.out.println("时长：" + getFormattedTime(info.getIntValue("duration"), info.getIntValue("duration") > 3600));
 		System.out.println("播放数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("view")));
 		System.out.println("弹幕数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("danmaku")));
@@ -120,19 +120,19 @@ public class Main {
 		}
 		System.out.println("\n请输入保存目录：");
 		Path path = Paths.get(scanner.next(), name.replaceAll("[/\\\\:*?<>|]", "_"));
-		System.out.println("\n下载选项：\n  1. 视频+音频（合并需要ffmpeg）\n  2. 仅视频\n  3. 仅音频\n请选择下载选项（输入 1~3 之间的整数）：");
+		System.out.println("\n下载选项：\n  1. 视频+音频（合并需要 FFmpeg）\n  2. 仅视频\n  3. 仅音频\n请选择下载选项（输入 1~3 之间的整数）：");
 		int choice = scanner.nextInt();
 		if (choice > 3) {
 			System.out.println("输入的数字“" + choice + "”太大，已为您选择最后一个选项 仅音频");
 			choice = 3;
 		}
 		if (choice < 1) {
-			System.out.println("输入的数字“" + choice + "”太小，已为您选择第一个选项 视频+音频（合并需要ffmpeg）");
+			System.out.println("输入的数字“" + choice + "”太小，已为您选择第一个选项 视频+音频（合并需要 FFmpeg）");
 			choice = 1;
 		}
 		switch (choice) {
 			case 1: {
-				System.out.println("\n请输入ffmpeg.exe的路径（跳过合并请填“#”）：");
+				System.out.println("\n请输入 ffmpeg.exe 路径（跳过合并请填“#”）：");
 				String ffmpeg = scanner.next();
 				boolean videoSuccess, audioSuccess;
 				System.out.println();
@@ -278,17 +278,6 @@ public class Main {
 		return null;
 	}
 
-//	private static int getQualityNumber(JSONObject video, String qStr) {
-//		JSONArray descriptions = video.getJSONArray("accept_description");
-//		JSONArray qualityNums = video.getJSONArray("accept_quality");
-//		for (int i = 0; i < qualityNums.size(); i++) {
-//			if (qStr.startsWith(descriptions.getString(i))) {
-//				return qualityNums.getIntValue(i);
-//			}
-//		}
-//		return 0;
-//	}
-
 	private static String getVideoDownload(JSONObject video, int quality) {
 		int qualityNum = video.getJSONArray("accept_quality").getIntValue(quality);
 		JSONArray videos = video.getJSONObject("dash").getJSONArray("video");
@@ -312,8 +301,7 @@ public class Main {
 
 	private static URLConnection readUrl(String url, String cookie) throws IOException {
 		String userAgent = UserAgentManager.getUserAgent();
-		if (debug) System.out.println("正在访问 " + url + "，使用 UA “" + userAgent + "”");
-//		Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1081));
+		if (debug) System.out.println("正在访问 " + url + "，使用 UA“" + userAgent + "”");
 		URLConnection request = (new URL(url)).openConnection();
 		request.setRequestProperty("User-Agent", userAgent);
 		if (!cookie.equals("#"))
@@ -328,7 +316,7 @@ public class Main {
 	}
 
 	private static long download(String address, String path) {
-		int byteRead; // 1. 下载网络文件
+		int byteRead;
 		URL url;
 		try {
 			url = new URL(address);
@@ -337,10 +325,10 @@ public class Main {
 			return -1;
 		}
 		try {
-			URLConnection conn = url.openConnection(); // 2. 获取链接
+			URLConnection conn = url.openConnection();
 			conn.setRequestProperty("Referer", "https://www.bilibili.com");
-			InputStream inStream = conn.getInputStream(); // 3. 输入流
-			FileOutputStream fs = new FileOutputStream(path); // 4. 写入文件
+			InputStream inStream = conn.getInputStream();
+			FileOutputStream fs = new FileOutputStream(path);
 
 			byte[] buffer = new byte[1024];
 			String progress = "";
