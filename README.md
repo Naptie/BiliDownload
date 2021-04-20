@@ -4,7 +4,7 @@
 
 ---
 
-#声明
+# 声明
 
 1. 本项目遵循 MIT 协议，修改/发布前须经本人同意;
 
@@ -16,7 +16,7 @@
 
 ---
 
-#使用前
+# 使用前
 
 1. 请确保您已安装 [JDK 8](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) 或更高版本。
 
@@ -24,7 +24,7 @@
 
 ---
 
-#使用流程
+# 使用流程
 
 0. （可跳过）使用 `mvn clean package` 命令进行编译。
 
@@ -52,7 +52,7 @@
 
 ---
 
-#补充
+# 补充
 
 1. 本程序仍然存在诸如 Maven 编译配置不恰当、不支持 4K 与 1080P+ 清晰度的无水印下载、下载速度慢等问题，欢迎大家多多 pr。
 
@@ -60,10 +60,10 @@
 
 ---
 
-#ChangeLog
+# ChangeLog
 
 ## 1.1.0
-###1. 解决了访问 URL 时拒绝连接的问题 ([Issue #1](https://github.com/Naptie/BiliDownload/issues/1))
+### 1. 解决了访问 URL 时拒绝连接的问题 ([Issue #1](https://github.com/Naptie/BiliDownload/issues/1))
 
 造成这个问题的原因很简单，就是我在 `readUrl(String url, String cookie)` 方法中写了这样一行代码：
   
@@ -73,7 +73,7 @@
 
 ![image](https://github.com/Naptie/BiliDownload/blob/main/bin/your_debugging.jpg)
 
-###2. 添加了 Debug 模式
+### 2. 添加了 Debug 模式
 
 在参数中添加 `debug`，即可启用 debug 模式。在该模式下，程序每当访问一个 URL 时，就会输出所访问的 URL 以及所使用的 UA。其中，下载视频或音频时访问的 URL 将不被输出，因为这些 URL 已经通过 `成功获取...下载地址：...` 输出了。
 
@@ -82,7 +82,7 @@
 
 ---
 
-#无水印视频流接口的探索历程
+# 无水印视频流接口的探索历程
 
 - 0
 
