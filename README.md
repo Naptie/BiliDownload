@@ -63,7 +63,7 @@
 # ChangeLog
 
 ## 1.1.0
-### 1. 解决了访问 URL 时拒绝连接的问题（Issue #1）
+### 1. 解决了访问 URL 时拒绝连接的问题（[Issue #1](https://github.com/Naptie/BiliDownload/issues/1)）
 
 导致这个问题的原因很简单，就是我在 `readUrl(String url, String cookie)` 方法中写了这样一行代码：
   
