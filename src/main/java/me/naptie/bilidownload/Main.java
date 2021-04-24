@@ -3,16 +3,24 @@ package me.naptie.bilidownload;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.naptie.bilidownload.utils.ConfigManager;
 import me.naptie.bilidownload.utils.UserAgentManager;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -32,10 +40,60 @@ public class Main {
 		}
 		System.out.println("请输入一个 AV 号或 BV 号：");
 		String id = scanner.next();
-		System.out.println("\n请输入 Cookie 中 SESSDATA 的值（若无请填“#”）：");
-		String sessData = scanner.next();
+		String sessData, cookie = "#";
+		File config = new File("config.yml");
+		boolean loginSuccess = false;
+		if (config.exists()) {
+			ConfigManager.init(config);
+			Map<String, Object> map = ConfigManager.get();
+			if (map == null)
+				map = new LinkedHashMap<>();
+			if (map.containsKey("sess-data")) {
+				sessData = (String) map.get("sess-data");
+				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
+				JSONObject login = readJsonFromUrl("http://api.bilibili.com/x/web-interface/nav", cookie);
+				if (login.getIntValue("code") == 0)
+					if (login.getJSONObject("data").getBoolean("isLogin")) {
+						if (debug) System.out.println("检测到配置文件，已自动填充 SESSDATA\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+						loginSuccess = true;
+					}
+			}
+		}
+		while (!loginSuccess) {
+			System.out.println("\n请输入 Cookie 中 SESSDATA 的值（若无请填“#”）：");
+			sessData = scanner.next();
+			if (sessData.equals("#")) {
+				cookie = "#";
+				loginSuccess = true;
+				break;
+			} else {
+				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
+				JSONObject login = readJsonFromUrl("http://api.bilibili.com/x/web-interface/nav", cookie);
+				if (login.getIntValue("code") == 0)
+					if (login.getJSONObject("data").getBoolean("isLogin")) {
+						loginSuccess = true;
+						System.out.println("登录成功\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+						System.out.println("请决定是否保存该 SESSDATA（输入“Y”或“N”）：");
+						if (scanner.next().equalsIgnoreCase("Y")) {
+							if (!config.exists()) config.createNewFile();
+							ConfigManager.init(config);
+							Map<String, Object> map = ConfigManager.get();
+							if (map == null)
+								map = new LinkedHashMap<>();
+							map.put("sess-data", sessData);
+							ConfigManager.dump(map);
+							System.out.println("已保存 SESSDATA");
+						}
+					} else {
+						System.out.println("登录失败");
+					}
+				else {
+					System.out.println("登录失败");
+				}
+			}
+		}
+
 		String infoUrl = "http://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id);
-		String cookie = sessData.equals("#") ? "#" : "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
 		System.out.println("\n正在获取稿件信息······");
 		JSONObject info = readJsonFromUrl(infoUrl, cookie);
 		if (info.getIntValue("code") != 0) {
@@ -118,8 +176,50 @@ public class Main {
 				videoDownloadUrl = getVideoDownload(video2, 0);
 			}
 		}
-		System.out.println("\n请输入保存目录：");
-		Path path = Paths.get(scanner.next(), name.replaceAll("[/\\\\:*?<>|]", "_"));
+		boolean pathSuccess = false;
+		String savePath = "";
+		if (config.exists()) {
+			ConfigManager.init(config);
+			Map<String, Object> map = ConfigManager.get();
+			if (map == null)
+				map = new LinkedHashMap<>();
+			if (map.containsKey("save-path")) {
+				File file = new File((String) map.get("save-path"));
+				if (file.isDirectory()) {
+					pathSuccess = true;
+					savePath = file.getAbsolutePath();
+					if (debug) System.out.println("\n成功获取保存路径：" + savePath);
+				}
+			}
+		}
+		while (!pathSuccess) {
+			System.out.println("\n请输入保存路径：");
+			savePath = scanner.next();
+			File file = new File(savePath);
+			if (!file.exists()) {
+				System.out.println("该目录不存在，请决定是否创建该目录（输入“Y”或“N”）：");
+				if (scanner.next().equalsIgnoreCase("Y")) {
+					pathSuccess = file.mkdirs();
+					if (!pathSuccess) System.out.println("创建目录失败");
+				}
+			} else {
+				pathSuccess = true;
+			}
+			if (pathSuccess) {
+				System.out.println("请决定是否保存该保存路径（输入“Y”或“N”）：");
+				if (scanner.next().equalsIgnoreCase("Y")) {
+					if (!config.exists()) config.createNewFile();
+					ConfigManager.init(config);
+					Map<String, Object> map = ConfigManager.get();
+					if (map == null)
+						map = new LinkedHashMap<>();
+					map.put("save-path", savePath);
+					ConfigManager.dump(map);
+					System.out.println("已保存该保存路径");
+				}
+			}
+		}
+		Path path = Paths.get(savePath, name.replaceAll("[/\\\\:*?<>|]", "_"));
 		System.out.println("\n下载选项：\n  1. 视频+音频（合并需要 FFmpeg）\n  2. 仅视频\n  3. 仅音频\n请选择下载选项（输入 1~3 之间的整数）：");
 		int choice = scanner.nextInt();
 		if (choice > 3) {
@@ -132,10 +232,44 @@ public class Main {
 		}
 		switch (choice) {
 			case 1: {
-				System.out.println("\n请输入 ffmpeg.exe 路径（跳过合并请填“#”）：");
-				String ffmpeg = scanner.next();
+				int ffmpegSuccess = 0;
+				File ffmpeg = new File(System.getProperty("user.dir"), "null");
+				if (config.exists()) {
+					ConfigManager.init(config);
+					Map<String, Object> map = ConfigManager.get();
+					if (map == null)
+						map = new LinkedHashMap<>();
+					if (map.containsKey("ffmpeg-path")) {
+						String ffmpegPath = (String) map.get("ffmpeg-path");
+						ffmpeg = ffmpegPath.endsWith("ffmpeg.exe") ? new File(ffmpegPath) : new File(ffmpegPath, "ffmpeg.exe");
+						ffmpegSuccess = ffmpeg.exists() ? 1 : 0;
+						if (ffmpegSuccess == 1 && debug) System.out.println("\n成功获取 FFmpeg 路径：" + savePath);
+					}
+				}
+				while (ffmpegSuccess == 0) {
+					System.out.println("\n请输入 ffmpeg.exe 目录（跳过合并请填“#”）：");
+					String ffmpegPath = scanner.next();
+					if (ffmpegPath.equals("#")) {
+						ffmpegSuccess = -1;
+						break;
+					}
+					ffmpeg = ffmpegPath.endsWith("ffmpeg.exe") ? new File(ffmpegPath) : new File(ffmpegPath, "ffmpeg.exe");
+					ffmpegSuccess = ffmpeg.exists() ? 1 : 0;
+					if (ffmpegSuccess == 1) {
+						System.out.println("请决定是否保存 FFmpeg 路径（输入“Y”或“N”）：");
+						if (scanner.next().equalsIgnoreCase("Y")) {
+							if (!config.exists()) config.createNewFile();
+							ConfigManager.init(config);
+							Map<String, Object> map = ConfigManager.get();
+							if (map == null)
+								map = new LinkedHashMap<>();
+							map.put("ffmpeg-path", ffmpeg.getAbsolutePath());
+							ConfigManager.dump(map);
+							System.out.println("已保存 FFmpeg 路径");
+						}
+					}
+				}
 				boolean videoSuccess, audioSuccess;
-				System.out.println();
 				if (videoDownloadUrl == null) {
 					System.out.print("\n无法获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址，已为您选择最佳清晰度 " + getQualityDescription(video2, video2.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getIntValue("id")));
 					videoDownloadUrl = video2.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getString("base_url");
@@ -145,8 +279,8 @@ public class Main {
 				}
 				String audioDownloadUrl = getAudioDownload(video2);
 				System.out.println("\n成功获取音频下载地址：" + audioDownloadUrl);
-				File video = ffmpeg.equals("#") ? new File(path + ".mp4") : new File(System.getProperty("user.dir"), "tmpVid.mp4");
-				File audio = ffmpeg.equals("#") ? new File(path + ".aac") : new File(System.getProperty("user.dir"), "tmpAud.aac");
+				File video = ffmpegSuccess == -1 ? new File(path + ".mp4") : new File(System.getProperty("user.dir"), "tmpVid.mp4");
+				File audio = ffmpegSuccess == -1 ? new File(path + ".aac") : new File(System.getProperty("user.dir"), "tmpAud.aac");
 				System.out.println("\n正在下载视频至 " + video.getAbsolutePath());
 				long lenVid = download(videoDownloadUrl, video.getAbsolutePath());
 				videoSuccess = video.length() == lenVid;
@@ -155,9 +289,9 @@ public class Main {
 				long lenAud = download(audioDownloadUrl, audio.getAbsolutePath());
 				audioSuccess = audio.length() == lenAud;
 				System.out.println(audioSuccess ? "\n音频下载完毕" : "\n音频下载失败");
-				if (videoSuccess && audioSuccess && !ffmpeg.equals("#")) {
+				if (videoSuccess && audioSuccess && ffmpegSuccess == 1 && !ffmpeg.getName().equals("null")) {
 					System.out.println("\n正在合并至 " + path + ".mp4");
-					File file = merge(ffmpeg.endsWith("ffmpeg.exe") ? new File(ffmpeg) : new File(ffmpeg, "ffmpeg.exe"), video, audio, new File(path + ".mp4"));
+					File file = merge(ffmpeg, video, audio, new File(path + ".mp4"));
 					if (file != null) {
 						System.out.println("\n合并完毕");
 						video.deleteOnExit();
@@ -206,7 +340,7 @@ public class Main {
 		}
 		String min = (time % 3600) / 60 + "";
 		result += (min.length() < 2 ? "0" + min : min) + ":";
-		String sec = time %  60 + "";
+		String sec = time % 60 + "";
 		result += sec.length() < 2 ? "0" + sec : sec;
 		return result;
 	}
@@ -316,6 +450,7 @@ public class Main {
 	}
 
 	private static long download(String address, String path) {
+		long beginTime = System.currentTimeMillis();
 		int byteRead;
 		URL url;
 		try {
@@ -331,17 +466,29 @@ public class Main {
 			FileOutputStream fs = new FileOutputStream(path);
 
 			byte[] buffer = new byte[1024];
-			String progress = "";
+			StringBuilder progress = new StringBuilder();
+			double total = conn.getContentLengthLong() / 1024.0 / 1024.0;
 			System.out.print("进度：");
 			while ((byteRead = inStream.read(buffer)) != -1) {
 				fs.write(buffer, 0, byteRead);
-				if (!progress.isEmpty())
-					for (int i = 0; i < progress.length(); i++)
+				int lastByteLength = progress.toString().getBytes().length;
+				int lastLength = progress.length();
+				if (progress.length() > 0) {
+					for (int i = 0; i < lastByteLength; i++)
 						System.out.print("\b");
-				progress = String.format("%.2f", (fs.getChannel().size() * 100.0 / conn.getContentLengthLong())) + "% (" + String.format("%,f", Math.round(fs.getChannel().size() / 1024.0) / 1024.0) + "MB / " + String.format("%,f", Math.round(conn.getContentLengthLong() / 1024.0) / 1024.0) + "MB)";
+				}
+				double downloaded = fs.getChannel().size() / 1024.0 / 1024.0;
+				double speed = ((System.currentTimeMillis() - beginTime)/1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
+				progress = new StringBuilder(String.format("%.2f", (fs.getChannel().size() * 100.0 / conn.getContentLengthLong())) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed) + "s");
+				for (int i = 0; i <= lastLength - progress.length(); i++)
+					progress.append(" ");
 				System.out.print(progress);
 			}
-			System.out.println();
+			System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+			String timeSpent = "用时：" + String.format("%,.3f", (System.currentTimeMillis() - beginTime) / 1000.0) + "s";
+			System.out.print(timeSpent);
+			for (int i = 0; i < 13 - timeSpent.length(); i++)
+				System.out.print(" ");
 			inStream.close();
 			fs.close();
 			return conn.getContentLengthLong();

@@ -6,7 +6,7 @@
 
     <groupId>me.naptie</groupId>
     <artifactId>bili-download</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.5</version>
     <build>
         <plugins>
             <plugin>
@@ -17,18 +17,6 @@
                     <target>8</target>
                 </configuration>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-jar-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <addClasspath>true</addClasspath>-->
-<!--                            <mainClass>me.naptie.bilidownload.Main</mainClass> &lt;!&ndash; 此处为主入口&ndash;&gt;-->
-<!--                        </manifest>-->
-<!--                    </archive>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -71,6 +59,11 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.70</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.28</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
