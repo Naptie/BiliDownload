@@ -243,4 +243,4 @@ Fiddler 还是带来了希望。
 
 **将被无限重生。**
 
-![image](https://github.com/Naptie/BiliDownload/blob/main/bin/example.png)
+![](https://github.com/Naptie/BiliDownload/blob/main/bin/example.png)
