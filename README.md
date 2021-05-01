@@ -28,7 +28,7 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.1.5-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`，即输入 `java -jar bili-download-1.1.5-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.1.6-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`，即输入 `java -jar bili-download-1.1.6-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -81,6 +81,18 @@
 ---
 
 # ChangeLog
+## 1.1.6
+### 1. 添加了退出功能
+
+在每次输入时，若输入 `*exit`，则程序会调用 `System.exit(0)` 中止进程。
+
+### 2. 优化了代码结构
+
+将主函数拆分成了多个函数，每一步为一个函数，增强了代码的可读性。
+
+### 3. 优化了输出
+
+若输入源为 `Input.txt` 文件，则程序在正常模式下将不再显示输入提示，在 `debug` 模式下会一并输出所读取的内容。
 
 ## 1.1.5
 ### 1. 添加了 SESSDATA、保存路径、FFmpeg 路径的记忆功能

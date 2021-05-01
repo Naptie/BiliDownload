@@ -23,7 +23,7 @@ import java.util.Scanner;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class Main {
 
-	private static boolean debug;
+	private static boolean debug, hint, isFileInput;
 	private static Scanner scanner;
 	private static File config;
 	private static long beginTime;
@@ -54,9 +54,13 @@ public class Main {
 		File input = new File("Input.txt");
 		if (input.exists() && input.length() > 0) {
 			scanner = new Scanner(input);
+			isFileInput = true;
+			hint = debug;
 			System.out.println("检测到 Input.txt，已切换输入源\n");
 		} else {
 			scanner = new Scanner(System.in);
+			isFileInput = false;
+			hint = true;
 		}
 	}
 
@@ -66,19 +70,21 @@ public class Main {
 			System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
 			System.exit(0);
 		}
+		if (debug && hint && isFileInput) System.out.println(input);
 		return input;
 	}
 
 	private static int inputInt() {
 		String input = scanner.next();
 		if (input.equalsIgnoreCase("*exit")) {
-			Thread.currentThread().interrupt();
+			System.exit(0);
 		}
+		if (debug && hint && isFileInput) System.out.println(input);
 		return Integer.parseInt(input);
 	}
 
 	private static String getNumber() {
-		System.out.println("请输入一个 AV 号或 BV 号：");
+		if (hint) System.out.println("请输入一个 AV 号或 BV 号：");
 		return inputStr();
 	}
 
@@ -102,7 +108,7 @@ public class Main {
 			}
 		}
 		while (!loginSuccess) {
-			System.out.println("\n请输入 Cookie 中 SESSDATA 的值（若无请填“#”）：");
+			if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值（若无请填“#”）：");
 			sessData = inputStr();
 			if (sessData.equals("#")) {
 				cookie = "#";
@@ -114,7 +120,7 @@ public class Main {
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						loginSuccess = true;
 						System.out.println("登录成功\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
-						System.out.println("请决定是否保存该 SESSDATA（输入“Y”或“N”）：");
+						if (hint) System.out.println("请决定是否保存该 SESSDATA（输入“Y”或“N”）：");
 						if (inputStr().equalsIgnoreCase("Y")) {
 							if (!config.exists()) config.createNewFile();
 							ConfigManager.init(config);
@@ -123,7 +129,7 @@ public class Main {
 								map = new LinkedHashMap<>();
 							map.put("sess-data", sessData);
 							ConfigManager.dump(map);
-							System.out.println("已保存 SESSDATA");
+							if (hint) System.out.println("已保存 SESSDATA");
 						}
 					} else {
 						System.out.println("登录失败");
@@ -137,11 +143,11 @@ public class Main {
 	}
 
 	private static JSONObject getVideoInfo(String id, String cookie) throws IOException {
-		System.out.println("\n正在获取稿件信息······");
+		System.out.println((hint ? "\n" : "") + "正在获取稿件信息······");
 		JSONObject info = readJsonFromUrl("http://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id), cookie);
 		if (info.getIntValue("code") != 0) {
 			System.out.println(info.getString("message"));
-			System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
+			System.out.println("\n程序运行结束，错误代码：" + info.getIntValue("code") + "；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
 			System.exit(info.getIntValue("code"));
 		} else {
 			info = info.getJSONObject("data");
@@ -166,7 +172,7 @@ public class Main {
 			for (int i = 0; i < pages.size(); i++) {
 				System.out.println(String.format("%3d", (i + 1)) + ". P" + String.format("%-5d", pages.getJSONObject(i).getIntValue("page")) + "CID：" + pages.getJSONObject(i).getIntValue("cid") + "  时长：" + getFormattedTime(pages.getJSONObject(i).getIntValue("duration"), pages.getJSONObject(i).getIntValue("duration") >= 3600) + "  标题：" + pages.getJSONObject(i).getString("part"));
 			}
-			System.out.println("请选择分P（输入 1~" + pages.size() + " 之间的整数）：");
+			if (hint) System.out.println("请选择分P（输入 1~" + pages.size() + " 之间的整数）：");
 			int part = inputInt();
 			if (part > pages.size()) {
 				System.out.println("输入的数字“" + part + "”太大，已为您选择末尾的分P " + pages.getJSONObject(pages.size() - 1).getString("part"));
@@ -197,7 +203,7 @@ public class Main {
 		for (int i = 1; i < qualities.size(); i++) {
 			System.out.println(String.format("%3d", i) + ". " + qualities.getString(i));
 		}
-		System.out.println("请选择清晰度（输入 1~" + (qualities.size() - 1) + " 之间的整数）：");
+		if (hint) System.out.println("请选择清晰度（输入 1~" + (qualities.size() - 1) + " 之间的整数）：");
 		int quality = inputInt();
 		String videoDownloadUrl;
 		if (qualities.getIntValue(0) == 1) {
@@ -248,11 +254,11 @@ public class Main {
 			}
 		}
 		while (!pathSuccess) {
-			System.out.println("\n请输入保存路径：");
+			if (hint) System.out.println("\n请输入保存路径：");
 			savePath = inputStr();
 			File file = new File(savePath);
 			if (!file.exists()) {
-				System.out.println("该目录不存在，请决定是否创建该目录（输入“Y”或“N”）：");
+				if (hint) System.out.println("该目录不存在，请决定是否创建该目录（输入“Y”或“N”）：");
 				if (inputStr().equalsIgnoreCase("Y")) {
 					pathSuccess = file.mkdirs();
 					if (!pathSuccess) System.out.println("创建目录失败");
@@ -261,7 +267,7 @@ public class Main {
 				pathSuccess = true;
 			}
 			if (pathSuccess) {
-				System.out.println("请决定是否保存该保存路径（输入“Y”或“N”）：");
+				if (hint) System.out.println("请决定是否保存该保存路径（输入“Y”或“N”）：");
 				if (inputStr().equalsIgnoreCase("Y")) {
 					if (!config.exists()) config.createNewFile();
 					ConfigManager.init(config);
@@ -270,7 +276,7 @@ public class Main {
 						map = new LinkedHashMap<>();
 					map.put("save-path", savePath);
 					ConfigManager.dump(map);
-					System.out.println("已保存该保存路径");
+					if (hint) System.out.println("已保存该保存路径");
 				}
 			}
 		}
@@ -282,7 +288,7 @@ public class Main {
 		JSONArray qualities = (JSONArray) details[1];
 		int quality = (int) details[2];
 		JSONObject videoWeb = (JSONObject) details[3];
-		System.out.println("\n下载选项：\n  1. 视频+音频（合并需要 FFmpeg）\n  2. 仅视频\n  3. 仅音频\n请选择下载选项（输入 1~3 之间的整数）：");
+		if (hint) System.out.println("\n下载选项：\n  1. 视频+音频（合并需要 FFmpeg）\n  2. 仅视频\n  3. 仅音频\n请选择下载选项（输入 1~3 之间的整数）：");
 		int choice = inputInt();
 		if (choice > 3) {
 			System.out.println("输入的数字“" + choice + "”太大，已为您选择最后一个选项 仅音频");
@@ -309,7 +315,7 @@ public class Main {
 					}
 				}
 				while (ffmpegSuccess == 0) {
-					System.out.println("\n请输入 ffmpeg.exe 目录（跳过合并请填“#”）：");
+					if (hint) System.out.println("\n请输入 ffmpeg.exe 目录（跳过合并请填“#”）：");
 					String ffmpegPath = inputStr();
 					if (ffmpegPath.equals("#")) {
 						ffmpegSuccess = -1;
@@ -318,7 +324,7 @@ public class Main {
 					ffmpeg = ffmpegPath.endsWith("ffmpeg.exe") ? new File(ffmpegPath) : new File(ffmpegPath, "ffmpeg.exe");
 					ffmpegSuccess = ffmpeg.exists() ? 1 : 0;
 					if (ffmpegSuccess == 1) {
-						System.out.println("请决定是否保存 FFmpeg 路径（输入“Y”或“N”）：");
+						if (hint) System.out.println("请决定是否保存 FFmpeg 路径（输入“Y”或“N”）：");
 						if (inputStr().equalsIgnoreCase("Y")) {
 							if (!config.exists()) config.createNewFile();
 							ConfigManager.init(config);
@@ -327,7 +333,7 @@ public class Main {
 								map = new LinkedHashMap<>();
 							map.put("ffmpeg-path", ffmpeg.getAbsolutePath());
 							ConfigManager.dump(map);
-							System.out.println("已保存 FFmpeg 路径");
+							if (hint) System.out.println("已保存 FFmpeg 路径");
 						}
 					}
 				}
@@ -452,14 +458,14 @@ public class Main {
 			qualities.add(1);
 			for (int i = 0; i < qualitiesTV.size(); i++)
 				if (!videoTV.getJSONArray("accept_watermark").getBoolean(i))
-					qualities.add(String.format("%-11s", "TV " + qualitiesTV.getString(i)) + watermark(videoTV.getJSONArray("accept_watermark").getBoolean(i)));
+					qualities.add(String.format("%-11s", qualitiesTV.getString(i)) + watermark(videoTV.getJSONArray("accept_watermark").getBoolean(i)));
 				else
 					qualities.add(qualitiesTV.getString(i));
 		} else {
 			qualities.add(0);
 		}
 		for (int i = 0; i < qualitiesWeb.size(); i++)
-			qualities.add("Web " + qualitiesWeb.getString(i));
+			qualities.add(qualitiesWeb.getString(i));
 		return qualities;
 	}
 
