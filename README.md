@@ -1,6 +1,6 @@
-#<center>BiliDownload</center>
+<h1 style="text-align: center;">BiliDownload</h1>
 
-###<center>本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</center>
+<h3 style="text-align: center;">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
 
 ---
 
