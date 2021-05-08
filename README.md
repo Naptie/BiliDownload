@@ -1,4 +1,4 @@
-#<div style="text-align: center;">BiliDownload</div>
+#<center>BiliDownload</center>
 
 ###<center>本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</center>
 
