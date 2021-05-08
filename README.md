@@ -1,6 +1,6 @@
-<h1 align="center">BiliDownload</h1>
+#<div style="text-align: center;">BiliDownload</div>
 
-<h3 align="center">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
+###<center>本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</center>
 
 ---
 
@@ -28,7 +28,7 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.1.6-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`，即输入 `java -jar bili-download-1.1.6-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`，即输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -81,6 +81,11 @@
 ---
 
 # ChangeLog
+## 1.1.7
+### 自定义化了暂时存储路径
+
+若选择 `视频+音频（合并需要 FFmpeg）` 并输入了 FFmpeg 路径，则程序在保存 `tmpVid.mp4` 与 `tmpAud.aac` 时将不再保存至 `System.getProperty("user.dir")` 获取的默认路径中，而将保存至指定的保存路径中。
+
 ## 1.1.6
 ### 1. 添加了退出功能
 
@@ -124,7 +129,7 @@
 ---
 
 # 无水印视频流接口的探索历程
-
+#### 视频：[B站](https://www.bilibili.com/video/BV1pK4y1N7gw)；[YouTube](https://youtu.be/ackdugNrRBc)。
 - 0
 
 3月31日的深夜，我无法安眠。

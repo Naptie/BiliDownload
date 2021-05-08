@@ -43,7 +43,7 @@ public class Main {
 
 		Object[] details = getResolutions(info, cookie, (int) specified[0]);
 
-		Path path = getPath((String) specified[1]);
+		String[] path = getPath((String) specified[1]);
 
 		download(details, path);
 
@@ -236,7 +236,7 @@ public class Main {
 		return new Object[]{videoDownloadUrl, qualities, quality, videoWeb};
 	}
 
-	private static Path getPath(String name) throws IOException {
+	private static String[] getPath(String name) throws IOException {
 		boolean pathSuccess = false;
 		String savePath = "";
 		if (config.exists()) {
@@ -280,10 +280,10 @@ public class Main {
 				}
 			}
 		}
-		return Paths.get(savePath, name.replaceAll("[/\\\\:*?<>|]", "_"));
+		return new String[]{savePath, name.replaceAll("[/\\\\:*?<>|]", "_")};
 	}
 
-	private static void download(Object[] details, Path path) throws IOException, InterruptedException {
+	private static void download(Object[] details, String[] path) throws IOException, InterruptedException {
 		String videoDownloadUrl = (String) details[0];
 		JSONArray qualities = (JSONArray) details[1];
 		int quality = (int) details[2];
@@ -347,8 +347,8 @@ public class Main {
 				}
 				String audioDownloadUrl = getAudioDownload(videoWeb);
 				System.out.println("\n成功获取音频下载地址：" + audioDownloadUrl);
-				File video = ffmpegSuccess == -1 ? new File(path + ".mp4") : new File(System.getProperty("user.dir"), "tmpVid.mp4");
-				File audio = ffmpegSuccess == -1 ? new File(path + ".aac") : new File(System.getProperty("user.dir"), "tmpAud.aac");
+				File video = ffmpegSuccess == -1 ? new File(path[0], path[1] + ".mp4") : new File(path[0], "tmpVid.mp4");
+				File audio = ffmpegSuccess == -1 ? new File(path[0], path[1] + ".aac") : new File(path[0], "tmpAud.aac");
 				System.out.println("\n正在下载视频至 " + video.getAbsolutePath());
 				long lenVid = downloadFromUrl(videoDownloadUrl, video.getAbsolutePath());
 				videoSuccess = video.length() == lenVid;
@@ -358,8 +358,8 @@ public class Main {
 				audioSuccess = audio.length() == lenAud;
 				System.out.println(audioSuccess ? "\n音频下载完毕" : "\n音频下载失败");
 				if (videoSuccess && audioSuccess && ffmpegSuccess == 1 && !ffmpeg.getName().equals("null")) {
-					System.out.println("\n正在合并至 " + path + ".mp4");
-					File file = merge(ffmpeg, video, audio, new File(path + ".mp4"));
+					System.out.println("\n正在合并至 " + new File(path[0], path[1] + ".mp4").getAbsolutePath());
+					File file = merge(ffmpeg, video, audio, new File(path[0], path[1] + ".mp4"));
 					if (file != null) {
 						System.out.println("合并完毕");
 						video.deleteOnExit();
@@ -379,7 +379,7 @@ public class Main {
 				} else {
 					System.out.println("\n成功获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址：" + videoDownloadUrl);
 				}
-				File video = new File(path + ".mp4");
+				File video = new File(path[0], path[1] + ".mp4");
 				System.out.println("\n正在下载至 " + video.getAbsolutePath());
 				long len = downloadFromUrl(videoDownloadUrl, video.getAbsolutePath());
 				videoSuccess = video.length() == len;
@@ -390,7 +390,7 @@ public class Main {
 				boolean audioSuccess;
 				String audioDownloadUrl = getAudioDownload(videoWeb);
 				System.out.println("\n成功获取音频下载地址：" + audioDownloadUrl);
-				File audio = new File(path + ".aac");
+				File audio = new File(path[0], path[1] + ".aac");
 				System.out.println("\n正在下载至 " + audio.getAbsolutePath());
 				long len = downloadFromUrl(audioDownloadUrl, audio.getAbsolutePath());
 				audioSuccess = audio.length() == len;
