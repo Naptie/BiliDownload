@@ -1,6 +1,20 @@
-<h1 style="text-align: center;">BiliDownload</h1>
-
-<h3 style="text-align: center;">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
+<!--suppress HtmlDeprecatedAttribute -->
+<h1 align="center">BiliDownload</h1>
+<h3 align="center">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
+<p align="center">
+    <a href="https://github.com/Naptie/BiliDownload/issues" style="text-decoration:none">
+        <img src="https://img.shields.io/github/issues/Naptie/BiliDownload.svg" alt="GitHub issues"/>
+    </a>
+    <a href="https://github.com/Naptie/BiliDownload/stargazers" style="text-decoration:none" >
+        <img src="https://img.shields.io/github/stars/Naptie/BiliDownload.svg" alt="GitHub stars"/>
+    </a>
+    <a href="https://github.com/Naptie/BiliDownload/network" style="text-decoration:none" >
+        <img src="https://img.shields.io/github/forks/Naptie/BiliDownload.svg" alt="GitHub forks"/>
+    </a>
+    <a href="https://github.com/Naptie/BiliDownload/blob/master/LICENSE" style="text-decoration:none" >
+        <img src="https://img.shields.io/github/license/Naptie/BiliDownload.svg" alt="GitHub license"/>
+    </a>
+</p>
 
 ---
 
