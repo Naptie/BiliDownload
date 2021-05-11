@@ -528,14 +528,14 @@ public class Main {
 			return -1;
 		}
 		try {
-			URLConnection conn = url.openConnection();
-			conn.setRequestProperty("Referer", "https://www.bilibili.com");
-			InputStream inStream = conn.getInputStream();
+			URLConnection request = url.openConnection();
+			request.setRequestProperty("Referer", "https://www.bilibili.com");
+			InputStream inStream = request.getInputStream();
 			FileOutputStream fs = new FileOutputStream(path);
 
 			byte[] buffer = new byte[1024];
 			StringBuilder progress = new StringBuilder();
-			double total = conn.getContentLengthLong() / 1024.0 / 1024.0;
+			double total = request.getContentLengthLong() / 1024.0 / 1024.0;
 			System.out.print("进度：");
 			while ((byteRead = inStream.read(buffer)) != -1) {
 				fs.write(buffer, 0, byteRead);
@@ -547,7 +547,7 @@ public class Main {
 				}
 				double downloaded = fs.getChannel().size() / 1024.0 / 1024.0;
 				double speed = ((System.currentTimeMillis() - beginTime) / 1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
-				progress = new StringBuilder(String.format("%.2f", (fs.getChannel().size() * 100.0 / conn.getContentLengthLong())) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed) + "s");
+				progress = new StringBuilder(String.format("%.2f", (fs.getChannel().size() * 100.0 / request.getContentLengthLong())) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed) + "s");
 				for (int i = 0; i <= lastLength - progress.length(); i++)
 					progress.append(" ");
 				System.out.print(progress);
@@ -559,7 +559,7 @@ public class Main {
 				System.out.print(" ");
 			inStream.close();
 			fs.close();
-			return conn.getContentLengthLong();
+			return request.getContentLengthLong();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return -1;
