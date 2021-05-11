@@ -42,7 +42,8 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`，即输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
+   ，即输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -80,7 +81,8 @@
 
 2. 如需下载 1080P+ 及更佳清晰度的视频，请确保您的账号已购买大会员。
 
-3. 获取视频的清晰度信息时会访问 TV 端 API 与 WEB 端 API。若通过 TV 端 API 可获取到无水印版本，则所得清晰度会优先排列在结果中，并添加 `无水印` 标记。否则，将只保留通过 WEB 端 API 所得的清晰度。注意，由于有无水印是根据 TV 端 API 提供的 `accept_watermark` 判断的，通过 WEB 端 API 获取的清晰度将一律不标记 `无水印`。这意味着没有 `无水印` 标记的清晰度不一定有水印。
+3. 获取视频的清晰度信息时会访问 TV 端 API 与 WEB 端 API。若通过 TV 端 API 可获取到无水印版本，则所得清晰度会优先排列在结果中，并添加 `无水印` 标记。否则，将只保留通过 WEB 端 API
+   所得的清晰度。注意，由于有无水印是根据 TV 端 API 提供的 `accept_watermark` 判断的，通过 WEB 端 API 获取的清晰度将一律不标记 `无水印`。这意味着没有 `无水印` 标记的清晰度不一定有水印。
 
 4. 在任一个步骤输入时，输入 `*exit` 会使程序结束运行。
 
@@ -95,12 +97,16 @@
 ---
 
 # ChangeLog
+
 ## 1.1.7
+
 ### 自定义化了暂时存储路径
 
-若选择 `视频+音频（合并需要 FFmpeg）` 并输入了 FFmpeg 路径，则程序在保存 `tmpVid.mp4` 与 `tmpAud.aac` 时将不再保存至 `System.getProperty("user.dir")` 获取的默认路径中，而将保存至指定的保存路径中。
+若选择 `视频+音频（合并需要 FFmpeg）` 并输入了 FFmpeg 路径，则程序在保存 `tmpVid.mp4` 与 `tmpAud.aac` 时将不再保存至 `System.getProperty("user.dir")`
+获取的默认路径中，而将保存至指定的保存路径中。
 
 ## 1.1.6
+
 ### 1. 添加了退出功能
 
 在每次输入时，若输入 `*exit`，则程序会调用 `System.exit(0)` 中止进程。
@@ -114,6 +120,7 @@
 若输入源为 `Input.txt` 文件，则程序在正常模式下将不再显示输入提示，在 `debug` 模式下会一并输出所读取的内容。
 
 ## 1.1.5
+
 ### 1. 添加了 SESSDATA、保存路径、FFmpeg 路径的记忆功能
 
 现在您不再需要在每次运行程序时都输入 SESSDATA、保存路径与 FFmpeg 路径，这些都将在输入一次之后保存到工作文件夹下的 `config.yml` 中。
@@ -123,27 +130,32 @@
 下载视频或音频时，程序除了显示进度，还会显示平均速度与剩余时间。下载完成后，会显示下载用时。
 
 ## 1.1.0
+
 ### 1. 解决了访问 URL 时拒绝连接的问题（[Issue #1](https://github.com/Naptie/BiliDownload/issues/1)）
 
 导致这个问题的原因很简单，就是我在 `readUrl(String url, String cookie)` 方法中写了这样一行代码：
-  
+
 `Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1081));`。
-  
+
 这直接导致了程序在访问 URL 时选择了位于1081端口的代理。因此，如果这个端口没有代理，就会提示拒绝连接。
 
 ![](https://github.com/Naptie/BiliDownload/blob/main/bin/your_debugging.jpg)
 
 ### 2. 添加了 Debug 模式
 
-在参数中添加 `debug`，即可启用 debug 模式。在该模式下，程序每当访问一个 URL 时，就会输出所访问的 URL 以及所使用的 UA。其中，下载视频或音频时访问的 URL 将不被输出，因为这些 URL 已经通过 `成功获取...下载地址：...` 输出了。
+在参数中添加 `debug`，即可启用 debug 模式。在该模式下，程序每当访问一个 URL 时，就会输出所访问的 URL 以及所使用的 UA。其中，下载视频或音频时访问的 URL 将不被输出，因为这些 URL
+已经通过 `成功获取...下载地址：...` 输出了。
 
 ## 1.0.0
+
 ### Initial Commit
 
 ---
 
 # 无水印视频流接口的探索历程
+
 #### 视频：[B站](https://www.bilibili.com/video/BV1pK4y1N7gw)；[YouTube](https://youtu.be/ackdugNrRBc)。
+
 - 0
 
 3月31日的深夜，我无法安眠。

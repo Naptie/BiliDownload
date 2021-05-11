@@ -12,8 +12,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -33,7 +31,7 @@ public class Main {
 		debug = args.length > 0 && args[0].equalsIgnoreCase("debug");
 		config = new File("config.yml");
 		setScanner();
-		
+
 		String id = getNumber();
 
 		String cookie = login();
@@ -102,7 +100,8 @@ public class Main {
 				JSONObject login = readJsonFromUrl("http://api.bilibili.com/x/web-interface/nav", cookie);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
-						if (debug) System.out.println("检测到配置文件，已自动填充 SESSDATA\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+						if (debug)
+							System.out.println("检测到配置文件，已自动填充 SESSDATA\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
 						loginSuccess = true;
 					}
 			}
@@ -311,7 +310,8 @@ public class Main {
 						String ffmpegPath = (String) map.get("ffmpeg-path");
 						ffmpeg = ffmpegPath.endsWith("ffmpeg.exe") ? new File(ffmpegPath) : new File(ffmpegPath, "ffmpeg.exe");
 						ffmpegSuccess = ffmpeg.exists() ? 1 : 0;
-						if (ffmpegSuccess == 1 && debug) System.out.println("\n成功获取 FFmpeg 路径：" + ffmpeg.getAbsolutePath());
+						if (ffmpegSuccess == 1 && debug)
+							System.out.println("\n成功获取 FFmpeg 路径：" + ffmpeg.getAbsolutePath());
 					}
 				}
 				while (ffmpegSuccess == 0) {
@@ -546,7 +546,7 @@ public class Main {
 						System.out.print("\b");
 				}
 				double downloaded = fs.getChannel().size() / 1024.0 / 1024.0;
-				double speed = ((System.currentTimeMillis() - beginTime)/1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
+				double speed = ((System.currentTimeMillis() - beginTime) / 1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
 				progress = new StringBuilder(String.format("%.2f", (fs.getChannel().size() * 100.0 / conn.getContentLengthLong())) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed) + "s");
 				for (int i = 0; i <= lastLength - progress.length(); i++)
 					progress.append(" ");
