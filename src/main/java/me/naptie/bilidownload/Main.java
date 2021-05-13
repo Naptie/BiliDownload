@@ -101,15 +101,15 @@ public class Main {
 			}
 		}
 		while (!loginSuccess) {
-			System.out.println("\n登录方式：\n  1. Web 端二维码登录\n  2. TV 端二维码登录\n  3. 输入 SESSDATA 登录\n请选择登录方式（输入 1~3 之间的整数）：");
+			System.out.println("\n登录方式：\n  1. Web 端二维码登录\n  2. TV 端二维码登录（暂不支持）\n  3. 输入 SESSDATA 登录\n  4. 跳过登录\n请选择登录方式（输入 1~4 之间的整数）：");
 			int method = inputInt();
 			if (method < 1) {
 				System.out.println("输入的数字“" + method + "”太小，已为您选择 Web 端二维码登录");
 				method = 1;
 			}
-			if (method > 3) {
-				System.out.println("输入的数字“" + method + "”太大，已为您选择输入 SESSDATA 登录");
-				method = 3;
+			if (method > 4) {
+				System.out.println("输入的数字“" + method + "”太大，已为您选择跳过登录");
+				method = 4;
 			}
 			if (method == 1) {
 				LoginManager.showQRCode(false);
@@ -123,12 +123,14 @@ public class Main {
 					continue;
 				}
 			} else if (method == 2) {
-				System.out.println("本方式仍在施工中······");
+				System.out.println("本方式仍在施工······");
 				sessData = "#";
 				System.exit(0);
-			} else {
-				if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值（若无请填“#”）：");
+			} else if (method == 3) {
+				if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值：");
 				sessData = input();
+			} else {
+				sessData = "#";
 			}
 			if (sessData.equals("#")) {
 				cookie = "#";

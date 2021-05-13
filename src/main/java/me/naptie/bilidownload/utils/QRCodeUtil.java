@@ -23,17 +23,13 @@ import java.util.Map;
 // 原帖：https://blog.csdn.net/qq_34928194/article/details/103824942
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class QRCodeUtil {
-	private static final int width = 600; // 图像宽度
-
-	private static final int height = 600; // 图像高度
 
 	private static final int ON_COLOR = 0xFF000001;
 
 	private static final int OFF_COLOR = 0xFFFFFFFF;
 
 	/**
-	 * @param width    二维码宽度，默认为600
-	 * @param height   二维码高度，默认为600
+	 * @param size    二维码尺寸
 	 * @param content  二维码内容，必填
 	 * @param logoPath logo 图片路径，若为空则生成不带 logo 的二维码
 	 * @param imgPath  生成二维码文件夹路径
@@ -41,17 +37,15 @@ public class QRCodeUtil {
 	 * @param suffix   生成二维码图片后缀类型，如 gif，必填
 	 * @author zch
 	 */
-	public static boolean generateQRImage(Integer width, Integer height, String content, String logoPath, String imgPath, String imgName, String suffix) {
+	public static boolean generateQRImage(Dimension size, String content, String logoPath, String imgPath, String imgName, String suffix) {
 		if (content == null || imgName == null || suffix == null) {
 			return false;
 		}
 		try {
-			width = width == null ? QRCodeUtil.width : width;
-			height = height == null ? QRCodeUtil.height : height;
 			if (logoPath != null && !"".equals(logoPath.trim())) {
-				QREncode(width, height, content, logoPath, imgPath, imgName, suffix);
+				QREncode(size.width, size.height, content, logoPath, imgPath, imgName, suffix);
 			} else {
-				QREncode(width, height, content, imgPath, imgName, suffix);
+				QREncode(size.width, size.height, content, imgPath, imgName, suffix);
 			}
 			return true;
 		} catch (Exception e) {

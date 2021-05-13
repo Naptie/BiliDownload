@@ -42,14 +42,18 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
-   ，即输入 `java -jar bili-download-1.1.7-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.1.9-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
+   ，即输入 `java -jar bili-download-1.1.9-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
-4. **[如果从未保存过 SESSDATA 或 cookie 已失效]** 输入 cookie 中 SESSDATA 的值。若填 `#` 则将跳过登录。
+4. **[如果从未保存过 SESSDATA 或 cookie 已失效]** 输入所选登录方式的编号。1.1.9 版本暂时不支持 TV 端二维码登录。
 
-5. **[如果手动输入了 SESSDATA]** 输入 `Y` 或 `N` 决定是否保存 SESSDATA。
+5. **[如果选择了登录方式并选择 Web 端二维码登录]** 打开标题为 `二维码登录` 的窗口，使用B站手机客户端扫码并确认登录，完成后关闭该窗口。
+
+4. **[如果选择了登录方式并选择输入 SESSDATA 登录]** 输入 cookie 中 SESSDATA 的值。
+
+5. **[如果选择了登录方式]** 输入 `Y` 或 `N` 决定是否保存 SESSDATA。
 
 6. 等待程序获取稿件信息。程序会返回稿件的标题、UP主、时长、播放数、弹幕数、获赞数、投币数以及收藏数。若该视频有多个分P，则会一并返回每个分P的 CID、时长与标题。
 
@@ -97,6 +101,13 @@
 ---
 
 # ChangeLog
+
+## 1.1.9
+
+### 添加了 Web 端二维码登录功能
+
+目前有两种登录方式可选：`Web 端二维码登录` 或 `输入 SESSDATA 登录`。`Web 端二维码登录` 与 `TV 端二维码登录` 的区别在于，前者调用 Web 端的 API 进行登录，在调用 Web 端 API
+下载视频时将解锁高清晰度；后者调用 TV 端的 API 进行登录，在调用 TV 端 API 下载视频时将解锁高清晰度。
 
 ## 1.1.7
 
