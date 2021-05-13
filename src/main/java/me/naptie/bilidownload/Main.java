@@ -45,7 +45,7 @@ public class Main {
 
 		download(details, path);
 
-		System.out.println("\n程序运行结束。总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
+		System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
 	}
 
 	private static void setScanner() throws FileNotFoundException {
