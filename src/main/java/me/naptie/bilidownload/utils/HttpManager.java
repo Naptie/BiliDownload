@@ -13,8 +13,8 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpManager {
 
-	public static HttpURLConnection readUrl(String url, String cookie, boolean post) throws IOException {
-		String userAgent = UserAgentManager.getUserAgent();
+	public static HttpURLConnection readUrl(String url, String cookie, boolean post, boolean tv) throws IOException {
+		String userAgent = tv ? UserAgentManager.getTVUserAgent() : UserAgentManager.getUserAgent();
 		if (Main.debug) System.out.println("正在访问 " + url + "，使用 UA“" + userAgent + "”");
 		HttpURLConnection request = (HttpURLConnection) (new URL(url)).openConnection();
 		request.setRequestProperty("User-Agent", userAgent);
@@ -29,7 +29,7 @@ public class HttpManager {
 		return request;
 	}
 
-	public static JSONObject readJsonFromUrl(String url, String cookie) throws IOException {
-		return JSON.parseObject(IOUtils.toString((InputStream) readUrl(url, cookie, false).getContent(), StandardCharsets.UTF_8));
+	public static JSONObject readJsonFromUrl(String url, String cookie, boolean tv) throws IOException {
+		return JSON.parseObject(IOUtils.toString((InputStream) readUrl(url, cookie, false, tv).getContent(), StandardCharsets.UTF_8));
 	}
 }

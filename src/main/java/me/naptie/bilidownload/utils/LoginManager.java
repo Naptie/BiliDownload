@@ -17,21 +17,51 @@ import java.util.Map;
 
 public class LoginManager {
 
-	public static String sessData;
-	private static String oauthKey;
+	public static String sessData, auth, accessToken;
 	private static Map<String, List<String>> headers;
 	private static JSONObject result;
 
-	public static void showQRCode(boolean tv) throws IOException {
+	public static void showQRCodeFromWeb() throws IOException {
 		sessData = "*Not_Yet_Prepared*";
-		JSONObject result = tv ? HttpManager.readJsonFromUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code", "#") : HttpManager.readJsonFromUrl("https://passport.bilibili.com/qrcode/getLoginUrl", "#");
+		JSONObject result = HttpManager.readJsonFromUrl("https://passport.bilibili.com/qrcode/getLoginUrl", "#", false);
 		if (result.getIntValue("code") != 0) {
 			System.out.println("无法获取二维码");
+			sessData = "";
 			return;
 		}
+		showQRCode(result, false);
+//		long begin = System.currentTimeMillis();
+//		long now;
+//		while (true) {
+//			now = System.currentTimeMillis();
+//			if ((now - begin) / 1000 > 0) {
+//				if (detectIfScanCompletes()) {
+//					login();
+//					break;
+//				}
+//				begin = now;
+//			}
+//		}
+	}
+
+	public static void showQRCodeFromTV() throws IOException {
+		sessData = "*TV_Login*";
+		accessToken = "*Not_Yet_Prepared*";
+		String params = "appkey=4409e2ce8ffd12b8&local_id=0&ts=" + System.currentTimeMillis();
+		JSONObject result = JSON.parseObject(IOUtils.toString((InputStream) HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code?" + params + "&sign=" + SignUtil.generate(params), "#", true, true).getContent(), StandardCharsets.UTF_8));
+		if (result.getIntValue("code") != 0) {
+			System.out.println("无法获取二维码；错误代码：" + result.getIntValue("code") + "，错误信息：" + result.getString("message"));
+			accessToken = "";
+			return;
+		}
+		showQRCode(result, true);
+	}
+
+	private static void showQRCode(JSONObject result, boolean tv) {
+		String platform = tv ? "TV" : "WEB";
 		String url = result.getJSONObject("data").getString("url");
-		oauthKey = result.getJSONObject("data").getString("oauthKey");
-		String imageName = "QRC" + oauthKey.substring(0, 8) + ".png";
+		auth = tv ? result.getJSONObject("data").getString("auth_code") : result.getJSONObject("data").getString("oauthKey");
+		String imageName = "QRC" + platform + auth.substring(0, 8) + ".png";
 		File image = new File(System.getProperty("user.dir"), imageName);
 		image.deleteOnExit();
 		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
@@ -47,21 +77,10 @@ public class LoginManager {
 			}
 		}
 		QRCodeUtil.generateQRImage(size, url, null, System.getProperty("user.dir"), imageName, "png");
-		if (Main.debug) System.out.println("二维码登录所用的 OAuthKey 为 " + oauthKey);
+		System.out.println();
+		if (Main.debug) System.out.println(platform + " 端二维码登录所用的密钥为 " + auth);
 		System.out.println("请使用B站手机客户端扫描窗口中显示的二维码并确认登录，完成后请关闭窗口");
-		Frame frame = new Frame("二维码登录", imageName, size);
-//		long begin = System.currentTimeMillis();
-//		long now;
-//		while (true) {
-//			now = System.currentTimeMillis();
-//			if ((now - begin) / 1000 > 0) {
-//				if (detectIfScanCompletes()) {
-//					login();
-//					break;
-//				}
-//				begin = now;
-//			}
-//		}
+		new Frame(platform + " 端二维码登录", imageName, size, tv);
 	}
 
 //	private static boolean detectIfScanCompletes() throws IOException {
@@ -76,19 +95,19 @@ public class LoginManager {
 //		return false;
 //	}
 
-	public static void login() {
+	public static void loginWeb() {
 //		if (headers == null || result == null || result.getIntValue("code") != 0)
-			try {
-				URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + oauthKey, "#", true);
-				headers = request.getHeaderFields();
-				result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
-			} catch (IOException e) {
-				e.printStackTrace();
-				sessData = "";
-				return;
-			}
+		try {
+			URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + auth, "#", true, false);
+			headers = request.getHeaderFields();
+			result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			e.printStackTrace();
+			sessData = "";
+			return;
+		}
 		if (result.getIntValue("code") != 0) {
-			System.out.println("无法验证二维码；错误信息：" + result.getString("message"));
+			System.out.println("无法验证二维码；错误代码：" + result.getIntValue("code") + "，错误信息：" + result.getString("message"));
 			sessData = "";
 			return;
 		}
@@ -117,5 +136,24 @@ public class LoginManager {
 			}
 			sessData = "";
 		}
+	}
+
+	public static void loginTV() {
+		try {
+			String params = "appkey=4409e2ce8ffd12b8&auth_code=" + auth + "&local_id=0&ts=" + System.currentTimeMillis();
+			URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/poll?" + params + "&sign=" + SignUtil.generate(params), "#", true, true);
+			headers = request.getHeaderFields();
+			result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			e.printStackTrace();
+			accessToken = "";
+			return;
+		}
+		if (result.getIntValue("code") != 0) {
+			System.out.println("无法验证二维码；错误代码：" + result.getIntValue("code") + "，错误信息：" + result.getString("message"));
+			accessToken = "";
+			return;
+		}
+		accessToken = result.getJSONObject("data").getString("access_token");
 	}
 }

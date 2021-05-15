@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import me.naptie.bilidownload.utils.ConfigManager;
 import me.naptie.bilidownload.utils.HttpManager;
 import me.naptie.bilidownload.utils.LoginManager;
+import me.naptie.bilidownload.utils.SignUtil;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -29,20 +30,13 @@ public class Main {
 		debug = args.length > 0 && args[0].equalsIgnoreCase("debug");
 		config = new File("config.yml");
 		setScanner();
-
 		String id = getNumber();
-
-		String cookie = login();
-
-		JSONObject info = getVideoInfo(id, cookie);
+		String[] login = login();
+		JSONObject info = getVideoInfo(id, login[0], !login[1].isEmpty());
 		Object[] specified = specify(info);
-
-		Object[] details = getResolutions(info, cookie, (int) specified[0]);
-
+		Object[] details = getResolutions(info, login, !login[1].isEmpty(), (int) specified[0]);
 		String[] path = getPath((String) specified[1]);
-
 		download(details, path);
-
 		System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
 	}
 
@@ -80,9 +74,9 @@ public class Main {
 		return input();
 	}
 
-	private static String login() throws IOException {
+	private static String[] login() throws IOException {
 		boolean loginSuccess = false;
-		String sessData, cookie = "#";
+		String sessData = "#", accessToken = "", cookie = "#";
 		if (config.exists()) {
 			ConfigManager.init(config);
 			Map<String, Object> map = ConfigManager.get();
@@ -91,7 +85,7 @@ public class Main {
 			if (map.containsKey("sess-data")) {
 				sessData = (String) map.get("sess-data");
 				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
-				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie);
+				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie, false);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						if (debug)
@@ -99,12 +93,22 @@ public class Main {
 						loginSuccess = true;
 					}
 			}
+			if (map.containsKey("access-token")) {
+				accessToken = (String) map.get("access-token");
+				String params = "access_key=" + accessToken + "&appkey=4409e2ce8ffd12b8&ts=" + System.currentTimeMillis();
+				JSONObject login = HttpManager.readJsonFromUrl("https://app.bilibili.com/x/v2/account/myinfo?" + params + "&sign=" + SignUtil.generate(params), "#", true);
+				if (login.getIntValue("code") == 0) {
+					if (debug)
+						System.out.println("检测到配置文件，已自动填充 token\nID：" + login.getJSONObject("data").getString("name") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+					loginSuccess = true;
+				}
+			}
 		}
-		while (!loginSuccess) {
-			System.out.println("\n登录方式：\n  1. Web 端二维码登录\n  2. TV 端二维码登录\n  3. 输入 SESSDATA 登录\n  4. 跳过登录\n请选择登录方式（输入 1~4 之间的整数）：");
+		do {
+			System.out.println("\n登录方式：\n  1. WEB 端二维码登录\n  2. TV 端二维码登录\n  3. 输入 SESSDATA 登录\n  4. 跳过登录\n请选择登录方式（输入 1~4 之间的整数）：");
 			int method = inputInt();
 			if (method < 1) {
-				System.out.println("输入的数字“" + method + "”太小，已为您选择 Web 端二维码登录");
+				System.out.println("输入的数字“" + method + "”太小，已为您选择 WEB 端二维码登录");
 				method = 1;
 			}
 			if (method > 4) {
@@ -112,36 +116,45 @@ public class Main {
 				method = 4;
 			}
 			if (method == 1) {
-				LoginManager.showQRCode(false);
-				while (true) {
+				LoginManager.showQRCodeFromWeb();
+				while (true)
 					if (!LoginManager.sessData.equalsIgnoreCase("*Not_Yet_Prepared*"))
 						break;
-				}
 				sessData = LoginManager.sessData;
 				if (sessData.isEmpty()) {
 					System.out.println("登录失败");
-					continue;
+					if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+					if (input().equalsIgnoreCase("Y"))
+						continue;
 				}
 			} else if (method == 2) {
-				sessData = "*TV_Login*";
-				LoginManager.showQRCode(true);
-
+				LoginManager.showQRCodeFromTV();
+				while (true)
+					if (!LoginManager.accessToken.equalsIgnoreCase("*Not_Yet_Prepared*"))
+						break;
+				accessToken = LoginManager.accessToken;
+				if (accessToken.isEmpty()) {
+					System.out.println("登录失败");
+					if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+					if (input().equalsIgnoreCase("Y"))
+						continue;
+				}
 			} else if (method == 3) {
 				if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值：");
 				sessData = input();
 			} else {
-				sessData = "#";
+				break;
 			}
 			if (sessData.equals("#")) {
 				cookie = "#";
 				break;
-			} else {
+			} else if (method != 2) {
 				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
-				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie);
+				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie, false);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						loginSuccess = true;
-						System.out.println("登录成功\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+						System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
 						if (hint) System.out.println("请决定是否保存该 SESSDATA（输入“Y”或“N”）：");
 						if (input().equalsIgnoreCase("Y")) {
 							if (!config.exists()) config.createNewFile();
@@ -153,20 +166,61 @@ public class Main {
 							ConfigManager.dump(map);
 							if (hint) System.out.println("已保存 SESSDATA");
 						}
+						if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+						if (input().equalsIgnoreCase("Y"))
+							loginSuccess = false;
 					} else {
 						System.out.println("登录失败");
+						if (loginSuccess) {
+							if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+							if (input().equalsIgnoreCase("Y"))
+								loginSuccess = false;
+						}
 					}
 				else {
 					System.out.println("登录失败");
+					if (loginSuccess) {
+						if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+						if (input().equalsIgnoreCase("Y"))
+							loginSuccess = false;
+					}
+				}
+			} else {
+				String params = "access_key=" + accessToken + "&appkey=4409e2ce8ffd12b8&ts=" + System.currentTimeMillis();
+				JSONObject login = HttpManager.readJsonFromUrl("https://app.bilibili.com/x/v2/account/myinfo?" + params + "&sign=" + SignUtil.generate(params), "#", true);
+				if (login.getIntValue("code") == 0) {
+					loginSuccess = true;
+					System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("name") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
+					if (hint) System.out.println("请决定是否保存该 token（输入“Y”或“N”）：");
+					if (input().equalsIgnoreCase("Y")) {
+						if (!config.exists()) config.createNewFile();
+						ConfigManager.init(config);
+						Map<String, Object> map = ConfigManager.get();
+						if (map == null)
+							map = new LinkedHashMap<>();
+						map.put("access-token", sessData);
+						ConfigManager.dump(map);
+						if (hint) System.out.println("已保存 token");
+					}
+					if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+					if (input().equalsIgnoreCase("Y"))
+						loginSuccess = false;
+				} else {
+					System.out.println("登录失败");
+					if (loginSuccess) {
+						if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+						if (input().equalsIgnoreCase("Y"))
+							loginSuccess = false;
+					}
 				}
 			}
-		}
-		return cookie;
+		} while (!loginSuccess);
+		return new String[]{cookie, accessToken};
 	}
 
-	private static JSONObject getVideoInfo(String id, String cookie) throws IOException {
+	private static JSONObject getVideoInfo(String id, String cookie, boolean tv) throws IOException {
 		System.out.println((hint ? "\n" : "") + "正在获取稿件信息······");
-		JSONObject info = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id), cookie);
+		JSONObject info = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id), tv ? "#" : cookie, tv);
 		if (info.getIntValue("code") != 0) {
 			System.out.println(info.getString("message"));
 			System.out.println("\n程序运行结束，错误代码：" + info.getIntValue("code") + "；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
@@ -212,12 +266,12 @@ public class Main {
 		return new Object[]{cid, name};
 	}
 
-	private static Object[] getResolutions(JSONObject info, String cookie, int cid) throws IOException {
+	private static Object[] getResolutions(JSONObject info, String[] auth, boolean tv, int cid) throws IOException {
 		System.out.println("\n正在获取清晰度信息······");
-		String videoUrlTV = "https://api.snm0516.aisee.tv/x/tv/ugc/playurl?avid=" + info.getIntValue("aid") + "&mobi_app=android_tv_yst&fnval=16&qn=120&cid=" + cid + "&platform=android&build=103800&fnver=0";
+		String videoUrlTV = "https://api.snm0516.aisee.tv/x/tv/ugc/playurl?avid=" + info.getIntValue("aid") + "&mobi_app=android_tv_yst&fnval=80&qn=120&cid=" + cid + (tv ? "&access_key=" + auth[1] : "") + "&fourk=1&platform=android&device=android&build=103800&fnver=0";
 		String videoUrlWeb = "https://api.bilibili.com/x/player/playurl?avid=" + info.getIntValue("aid") + "&cid=" + cid + "&fnval=80&fourk=1";
-		JSONObject videoTV = HttpManager.readJsonFromUrl(videoUrlTV, cookie);
-		JSONObject videoWeb = HttpManager.readJsonFromUrl(videoUrlWeb, cookie).getJSONObject("data");
+		JSONObject videoTV = HttpManager.readJsonFromUrl(videoUrlTV, "#", true);
+		JSONObject videoWeb = HttpManager.readJsonFromUrl(videoUrlWeb, auth[0], false).getJSONObject("data");
 		JSONArray qualitiesTV = videoTV.getJSONArray("accept_description");
 		JSONArray qualitiesWeb = videoWeb.getJSONArray("accept_description");
 		JSONArray qualities = summarize(qualitiesTV, qualitiesWeb, videoTV);
