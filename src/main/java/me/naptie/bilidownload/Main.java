@@ -91,7 +91,7 @@ public class Main {
 			if (map.containsKey("sess-data")) {
 				sessData = (String) map.get("sess-data");
 				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
-				JSONObject login = HttpManager.readJsonFromUrl("http://api.bilibili.com/x/web-interface/nav", cookie);
+				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						if (debug)
@@ -101,7 +101,7 @@ public class Main {
 			}
 		}
 		while (!loginSuccess) {
-			System.out.println("\n登录方式：\n  1. Web 端二维码登录\n  2. TV 端二维码登录（暂不支持）\n  3. 输入 SESSDATA 登录\n  4. 跳过登录\n请选择登录方式（输入 1~4 之间的整数）：");
+			System.out.println("\n登录方式：\n  1. Web 端二维码登录\n  2. TV 端二维码登录\n  3. 输入 SESSDATA 登录\n  4. 跳过登录\n请选择登录方式（输入 1~4 之间的整数）：");
 			int method = inputInt();
 			if (method < 1) {
 				System.out.println("输入的数字“" + method + "”太小，已为您选择 Web 端二维码登录");
@@ -123,9 +123,9 @@ public class Main {
 					continue;
 				}
 			} else if (method == 2) {
-				System.out.println("本方式仍在施工······");
-				sessData = "#";
-				System.exit(0);
+				sessData = "*TV_Login*";
+				LoginManager.showQRCode(true);
+
 			} else if (method == 3) {
 				if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值：");
 				sessData = input();
@@ -137,7 +137,7 @@ public class Main {
 				break;
 			} else {
 				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
-				JSONObject login = HttpManager.readJsonFromUrl("http://api.bilibili.com/x/web-interface/nav", cookie);
+				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						loginSuccess = true;
@@ -166,7 +166,7 @@ public class Main {
 
 	private static JSONObject getVideoInfo(String id, String cookie) throws IOException {
 		System.out.println((hint ? "\n" : "") + "正在获取稿件信息······");
-		JSONObject info = HttpManager.readJsonFromUrl("http://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id), cookie);
+		JSONObject info = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/view?" + (id.toLowerCase().startsWith("av") ? "aid=" + id.substring(2) : "bvid=" + id), cookie);
 		if (info.getIntValue("code") != 0) {
 			System.out.println(info.getString("message"));
 			System.out.println("\n程序运行结束，错误代码：" + info.getIntValue("code") + "；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
@@ -215,7 +215,7 @@ public class Main {
 	private static Object[] getResolutions(JSONObject info, String cookie, int cid) throws IOException {
 		System.out.println("\n正在获取清晰度信息······");
 		String videoUrlTV = "https://api.snm0516.aisee.tv/x/tv/ugc/playurl?avid=" + info.getIntValue("aid") + "&mobi_app=android_tv_yst&fnval=16&qn=120&cid=" + cid + "&platform=android&build=103800&fnver=0";
-		String videoUrlWeb = "http://api.bilibili.com/x/player/playurl?avid=" + info.getIntValue("aid") + "&cid=" + cid + "&fnval=80&fourk=1";
+		String videoUrlWeb = "https://api.bilibili.com/x/player/playurl?avid=" + info.getIntValue("aid") + "&cid=" + cid + "&fnval=80&fourk=1";
 		JSONObject videoTV = HttpManager.readJsonFromUrl(videoUrlTV, cookie);
 		JSONObject videoWeb = HttpManager.readJsonFromUrl(videoUrlWeb, cookie).getJSONObject("data");
 		JSONArray qualitiesTV = videoTV.getJSONArray("accept_description");

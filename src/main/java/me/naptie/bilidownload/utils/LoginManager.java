@@ -24,8 +24,7 @@ public class LoginManager {
 
 	public static void showQRCode(boolean tv) throws IOException {
 		sessData = "*Not_Yet_Prepared*";
-//		JSONObject result = tv ? HttpManager.readJsonFromUrl("http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code", "#") : HttpManager.readJsonFromUrl("http://passport.bilibili.com/qrcode/getLoginUrl", "#");
-		JSONObject result = HttpManager.readJsonFromUrl("http://passport.bilibili.com/qrcode/getLoginUrl", "#");
+		JSONObject result = tv ? HttpManager.readJsonFromUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code", "#") : HttpManager.readJsonFromUrl("https://passport.bilibili.com/qrcode/getLoginUrl", "#");
 		if (result.getIntValue("code") != 0) {
 			System.out.println("无法获取二维码");
 			return;
@@ -66,7 +65,7 @@ public class LoginManager {
 	}
 
 //	private static boolean detectIfScanCompletes() throws IOException {
-//		URLConnection request = HttpManager.readUrl("http://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + oauthKey, "#", true);
+//		URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + oauthKey, "#", true);
 //		result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
 //		if (result.getIntValue("code") == 0) {
 //			if (result.getBoolean("status")) {
@@ -80,7 +79,7 @@ public class LoginManager {
 	public static void login() {
 //		if (headers == null || result == null || result.getIntValue("code") != 0)
 			try {
-				URLConnection request = HttpManager.readUrl("http://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + oauthKey, "#", true);
+				URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + oauthKey, "#", true);
 				headers = request.getHeaderFields();
 				result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
 			} catch (IOException e) {
