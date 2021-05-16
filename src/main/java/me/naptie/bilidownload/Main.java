@@ -75,7 +75,7 @@ public class Main {
 	}
 
 	private static String[] login() throws IOException {
-		boolean loginSuccess = false;
+		boolean webSuccess = false, tvSuccess = false;
 		String sessData = "#", accessToken = "", cookie = "#";
 		if (config.exists()) {
 			ConfigManager.init(config);
@@ -88,9 +88,8 @@ public class Main {
 				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie, false);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
-						if (debug)
-							System.out.println("检测到配置文件，已自动填充 SESSDATA\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
-						loginSuccess = true;
+						System.out.println("成功使用保存的 SESSDATA 登录\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+						webSuccess = true;
 					}
 			}
 			if (map.containsKey("access-token")) {
@@ -98,13 +97,13 @@ public class Main {
 				String params = "access_key=" + accessToken + "&appkey=4409e2ce8ffd12b8&ts=" + System.currentTimeMillis();
 				JSONObject login = HttpManager.readJsonFromUrl("https://app.bilibili.com/x/v2/account/myinfo?" + params + "&sign=" + SignUtil.generate(params), "#", true);
 				if (login.getIntValue("code") == 0) {
-					if (debug)
-						System.out.println("检测到配置文件，已自动填充 token\nID：" + login.getJSONObject("data").getString("name") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
-					loginSuccess = true;
+					System.out.println("成功使用保存的 TOKEN 登录\nID：" + login.getJSONObject("data").getString("name") + "\nUID：" + login.getJSONObject("data").getIntValue("mid"));
+					tvSuccess = true;
 				}
 			}
 		}
-		do {
+		boolean loginSuccess = webSuccess && tvSuccess;
+		while (!loginSuccess) {
 			System.out.println("\n登录方式：\n  1. WEB 端二维码登录\n  2. TV 端二维码登录\n  3. 输入 SESSDATA 登录\n  4. 跳过登录\n请选择登录方式（输入 1~4 之间的整数）：");
 			int method = inputInt();
 			if (method < 1) {
@@ -117,27 +116,15 @@ public class Main {
 			}
 			if (method == 1) {
 				LoginManager.showQRCodeFromWeb();
-				while (true)
-					if (!LoginManager.sessData.equalsIgnoreCase("*Not_Yet_Prepared*"))
-						break;
 				sessData = LoginManager.sessData;
 				if (sessData.isEmpty()) {
 					System.out.println("登录失败");
-					if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
-					if (input().equalsIgnoreCase("Y"))
-						continue;
 				}
 			} else if (method == 2) {
 				LoginManager.showQRCodeFromTV();
-				while (true)
-					if (!LoginManager.accessToken.equalsIgnoreCase("*Not_Yet_Prepared*"))
-						break;
 				accessToken = LoginManager.accessToken;
 				if (accessToken.isEmpty()) {
 					System.out.println("登录失败");
-					if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
-					if (input().equalsIgnoreCase("Y"))
-						continue;
 				}
 			} else if (method == 3) {
 				if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值：");
@@ -145,17 +132,18 @@ public class Main {
 			} else {
 				break;
 			}
-			if (sessData.equals("#")) {
-				cookie = "#";
-				break;
-			} else if (method != 2) {
+			if (method != 2) {
+				if (sessData.equals("#")) {
+					cookie = "#";
+					break;
+				}
 				cookie = "SESSDATA=" + sessData + "; Path=/; Domain=bilibili.com;";
 				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie, false);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						loginSuccess = true;
 						System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
-						if (hint) System.out.println("请决定是否保存该 SESSDATA（输入“Y”或“N”）：");
+						if (hint) System.out.println("请决定是否保存该 SESSDATA（输入“Y”代表是，输入“N”代表否）：");
 						if (input().equalsIgnoreCase("Y")) {
 							if (!config.exists()) config.createNewFile();
 							ConfigManager.init(config);
@@ -166,24 +154,14 @@ public class Main {
 							ConfigManager.dump(map);
 							if (hint) System.out.println("已保存 SESSDATA");
 						}
-						if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+						if (hint) System.out.println("请决定是否继续登录（输入“Y”代表是，输入“N”代表否）：");
 						if (input().equalsIgnoreCase("Y"))
 							loginSuccess = false;
 					} else {
 						System.out.println("登录失败");
-						if (loginSuccess) {
-							if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
-							if (input().equalsIgnoreCase("Y"))
-								loginSuccess = false;
-						}
 					}
 				else {
 					System.out.println("登录失败");
-					if (loginSuccess) {
-						if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
-						if (input().equalsIgnoreCase("Y"))
-							loginSuccess = false;
-					}
 				}
 			} else {
 				String params = "access_key=" + accessToken + "&appkey=4409e2ce8ffd12b8&ts=" + System.currentTimeMillis();
@@ -191,30 +169,25 @@ public class Main {
 				if (login.getIntValue("code") == 0) {
 					loginSuccess = true;
 					System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("name") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
-					if (hint) System.out.println("请决定是否保存该 token（输入“Y”或“N”）：");
+					if (hint) System.out.println("请决定是否保存该 TOKEN（输入“Y”代表是，输入“N”代表否）：");
 					if (input().equalsIgnoreCase("Y")) {
 						if (!config.exists()) config.createNewFile();
 						ConfigManager.init(config);
 						Map<String, Object> map = ConfigManager.get();
 						if (map == null)
 							map = new LinkedHashMap<>();
-						map.put("access-token", sessData);
+						map.put("access-token", accessToken);
 						ConfigManager.dump(map);
-						if (hint) System.out.println("已保存 token");
+						if (hint) System.out.println("已保存 TOKEN");
 					}
-					if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
+					if (hint) System.out.println("请决定是否继续登录（输入“Y”代表是，输入“N”代表否）：");
 					if (input().equalsIgnoreCase("Y"))
 						loginSuccess = false;
 				} else {
 					System.out.println("登录失败");
-					if (loginSuccess) {
-						if (hint) System.out.println("请决定是否继续登录（输入“Y”或“N”）：");
-						if (input().equalsIgnoreCase("Y"))
-							loginSuccess = false;
-					}
 				}
 			}
-		} while (!loginSuccess);
+		}
 		return new String[]{cookie, accessToken};
 	}
 
@@ -334,7 +307,7 @@ public class Main {
 			savePath = input();
 			File file = new File(savePath);
 			if (!file.exists()) {
-				if (hint) System.out.println("该目录不存在，请决定是否创建该目录（输入“Y”或“N”）：");
+				if (hint) System.out.println("该目录不存在，请决定是否创建该目录（输入“Y”代表是，输入“N”代表否）：");
 				if (input().equalsIgnoreCase("Y")) {
 					pathSuccess = file.mkdirs();
 					if (!pathSuccess) System.out.println("创建目录失败");
@@ -343,7 +316,7 @@ public class Main {
 				pathSuccess = true;
 			}
 			if (pathSuccess) {
-				if (hint) System.out.println("请决定是否保存该保存路径（输入“Y”或“N”）：");
+				if (hint) System.out.println("请决定是否保存该保存路径（输入“Y”代表是，输入“N”代表否）：");
 				if (input().equalsIgnoreCase("Y")) {
 					if (!config.exists()) config.createNewFile();
 					ConfigManager.init(config);
@@ -401,7 +374,7 @@ public class Main {
 					ffmpeg = ffmpegPath.endsWith("ffmpeg.exe") ? new File(ffmpegPath) : new File(ffmpegPath, "ffmpeg.exe");
 					ffmpegSuccess = ffmpeg.exists() ? 1 : 0;
 					if (ffmpegSuccess == 1) {
-						if (hint) System.out.println("请决定是否保存 FFmpeg 路径（输入“Y”或“N”）：");
+						if (hint) System.out.println("请决定是否保存 FFmpeg 路径（输入“Y”代表是，输入“N”代表否）：");
 						if (input().equalsIgnoreCase("Y")) {
 							if (!config.exists()) config.createNewFile();
 							ConfigManager.init(config);

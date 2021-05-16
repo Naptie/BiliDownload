@@ -6,7 +6,7 @@ import java.awt.image.BufferedImage;
 
 public class Panel extends java.awt.Panel {
 
-	private final Image screenImage = new BufferedImage(600, 600, 2);
+	private final Image screenImage = new BufferedImage(500, 500, 2);
 
 	private final Graphics2D screenGraphic = (Graphics2D) screenImage.getGraphics();
 

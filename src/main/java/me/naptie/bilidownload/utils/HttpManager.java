@@ -18,13 +18,15 @@ public class HttpManager {
 		if (Main.debug) System.out.println("正在访问 " + url + "，使用 UA“" + userAgent + "”");
 		HttpURLConnection request = (HttpURLConnection) (new URL(url)).openConnection();
 		request.setRequestProperty("User-Agent", userAgent);
-		if (!cookie.equals("#"))
+		if (!cookie.equals("#")) {
 			request.setRequestProperty("Cookie", cookie);
+		}
 		System.setProperty("http.agent", userAgent);
 		request.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
 		request.setRequestProperty("Accept", "*/*");
-		if (post)
+		if (post) {
 			request.setRequestMethod("POST");
+		}
 		request.connect();
 		return request;
 	}
