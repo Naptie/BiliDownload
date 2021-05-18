@@ -14,20 +14,21 @@ public class Frame extends java.awt.Frame {
 		this.add(panel);
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				if (LoginManager.sessData.equalsIgnoreCase("*SessData_Not_Yet_Prepared*")) {
+				if (LoginManager.sessData != null && LoginManager.sessData.equalsIgnoreCase("*SessData_Not_Yet_Prepared*")) {
 					LoginManager.loginWeb();
 				}
-				if (tv && LoginManager.accessToken.equalsIgnoreCase("*Token_Not_Yet_Prepared*")) {
+				if (tv && LoginManager.accessToken != null && LoginManager.accessToken.equalsIgnoreCase("*Token_Not_Yet_Prepared*")) {
 					LoginManager.loginTV();
 				}
 				dispose();
 			}
 		});
+		this.setAlwaysOnTop(true);
 		this.pack();
 		this.setVisible(true);
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
-		this.setAlwaysOnTop(true);
+		this.setAlwaysOnTop(false);
 	}
 
 }

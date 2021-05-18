@@ -119,12 +119,14 @@ public class Main {
 				sessData = LoginManager.sessData;
 				if (sessData.isEmpty()) {
 					System.out.println("登录失败");
+					continue;
 				}
 			} else if (method == 2) {
 				LoginManager.showQRCodeFromTV();
 				accessToken = LoginManager.accessToken;
 				if (accessToken.isEmpty()) {
 					System.out.println("登录失败");
+					continue;
 				}
 			} else if (method == 3) {
 				if (hint) System.out.println("\n请输入 Cookie 中 SESSDATA 的值：");
@@ -141,7 +143,7 @@ public class Main {
 				JSONObject login = HttpManager.readJsonFromUrl("https://api.bilibili.com/x/web-interface/nav", cookie, false);
 				if (login.getIntValue("code") == 0)
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
-						loginSuccess = true;
+						webSuccess = loginSuccess = true;
 						System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
 						if (hint) System.out.println("请决定是否保存该 SESSDATA（输入“Y”代表是，输入“N”代表否）：");
 						if (input().equalsIgnoreCase("Y")) {
@@ -154,9 +156,11 @@ public class Main {
 							ConfigManager.dump(map);
 							if (hint) System.out.println("已保存 SESSDATA");
 						}
-						if (hint) System.out.println("请决定是否继续登录（输入“Y”代表是，输入“N”代表否）：");
-						if (input().equalsIgnoreCase("Y"))
-							loginSuccess = false;
+						if (!tvSuccess) {
+							if (hint) System.out.println("请决定是否继续登录（输入“Y”代表是，输入“N”代表否）：");
+							if (input().equalsIgnoreCase("Y"))
+								loginSuccess = false;
+						}
 					} else {
 						System.out.println("登录失败");
 					}
@@ -167,7 +171,7 @@ public class Main {
 				String params = "access_key=" + accessToken + "&appkey=4409e2ce8ffd12b8&ts=" + System.currentTimeMillis();
 				JSONObject login = HttpManager.readJsonFromUrl("https://app.bilibili.com/x/v2/account/myinfo?" + params + "&sign=" + SignUtil.generate(params), "#", true);
 				if (login.getIntValue("code") == 0) {
-					loginSuccess = true;
+					tvSuccess = loginSuccess = true;
 					System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("name") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
 					if (hint) System.out.println("请决定是否保存该 TOKEN（输入“Y”代表是，输入“N”代表否）：");
 					if (input().equalsIgnoreCase("Y")) {
@@ -180,9 +184,11 @@ public class Main {
 						ConfigManager.dump(map);
 						if (hint) System.out.println("已保存 TOKEN");
 					}
-					if (hint) System.out.println("请决定是否继续登录（输入“Y”代表是，输入“N”代表否）：");
-					if (input().equalsIgnoreCase("Y"))
-						loginSuccess = false;
+					if (!webSuccess) {
+						if (hint) System.out.println("请决定是否继续登录（输入“Y”代表是，输入“N”代表否）：");
+						if (input().equalsIgnoreCase("Y"))
+							loginSuccess = false;
+					}
 				} else {
 					System.out.println("登录失败");
 				}

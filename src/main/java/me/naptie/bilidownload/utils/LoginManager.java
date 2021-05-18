@@ -72,7 +72,7 @@ public class LoginManager {
 		long begin = System.currentTimeMillis();
 		long now;
 		if (tv) {
-			while (true) {
+			while (frame.isShowing()) {
 				now = System.currentTimeMillis();
 				if (now - begin > 1000) {
 					begin = now;
@@ -84,7 +84,7 @@ public class LoginManager {
 				}
 			}
 		} else {
-			while (true) {
+			while (frame.isShowing()) {
 				now = System.currentTimeMillis();
 				if (now - begin > 1000) {
 					begin = now;
@@ -105,6 +105,9 @@ public class LoginManager {
 			if (result.getBoolean("status")) {
 				headers = request.getHeaderFields();
 				return true;
+			} else if (result.getIntValue("data") == -2) {
+				headers = request.getHeaderFields();
+				return true;
 			}
 		}
 		return false;
@@ -114,7 +117,7 @@ public class LoginManager {
 		String params = "appkey=4409e2ce8ffd12b8&auth_code=" + auth + "&local_id=0&ts=" + System.currentTimeMillis();
 		URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/poll?" + params + "&sign=" + SignUtil.generate(params), "#", true, true);
 		result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
-		if (result.getIntValue("code") == 0) {
+		if (result.getIntValue("code") == 0 || result.getIntValue("code") == 86038) {
 			headers = request.getHeaderFields();
 			return true;
 		}
@@ -152,14 +155,22 @@ public class LoginManager {
 		} else {
 			int error = result.getIntValue("data");
 			switch (error) {
-				case -1:
+				case -1: {
 					System.out.println("密钥错误");
-				case -2:
+					break;
+				}
+				case -2: {
 					System.out.println("密钥超时");
-				case -4:
+					break;
+				}
+				case -4: {
 					System.out.println("未扫描二维码");
-				case -5:
+					break;
+				}
+				case -5: {
 					System.out.println("未确认登录");
+					break;
+				}
 			}
 			sessData = "";
 		}
