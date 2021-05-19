@@ -1,7 +1,7 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">BiliDownload</h1>
 
-![](https://github.com/Naptie/BiliDownload/blob/main/bin/logo.jpg)
+![](https://github.com/Naptie/BiliDownload/blob/main/bin/logo.png)
 
 <h3 align="center">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
 <p align="center">
