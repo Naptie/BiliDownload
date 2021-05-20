@@ -1,7 +1,9 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">BiliDownload</h1>
 
-![](https://github.com/Naptie/BiliDownload/blob/main/bin/logo-small.png)
+<p align="center">
+    <img src="bin/logo-small.png" alt="">
+</p>
 
 <h3 align="center">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
 <p align="center">
@@ -45,8 +47,8 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.2.0-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
-   ，即输入 `java -jar bili-download-1.2.0-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.3.0-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
+   ，即输入 `java -jar bili-download-1.3.0-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -97,15 +99,33 @@
 
 5. 对于上述使用流程中的所有输入，均可写入工作目录下的 `Input.txt` 中。
 
-6. **[BUG]** 在某些控制台中，实时更新的下载详细信息会无法正常显示。例如：缺少 `进度：`；下载完毕后速度信息的一部分被用时信息遮盖。
+6. **[BUG]** 在某些控制台中，实时更新的下载详细信息会无法正常显示。例如下载完毕后速度信息的一部分被用时信息遮盖。
 
-7. **[优化项]** 程序目前只支持单线程下载，可考虑添加多线程下载功能。如果程序的下载速度过慢，请自行访问下载地址进行下载。
+7. **[BUG]** 程序在进行多线程下载时会出现 `java.io.IOException: Server returned HTTP response code: 416 for URL: ...` 等错误。
 
-8. 本程序仍然存在诸如下载速度慢等问题，欢迎大家多多投递 issue 与 pull request。
+8. 本程序仍然存在诸多问题，欢迎大家多多投递 issue 与 pull request。
 
 ---
 
 # ChangeLog
+
+## 1.3.0
+
+### 1. 加速了下载
+
+使用32个线程进行视频与音频的下载，最高速度可达 23MB/s。
+
+### 2. 添加了 LOGO
+
+现在，BiliDownload 也有了自己的 LOGO。原图存于 `bin/logo.png`。
+
+### 3. 添加了 WEB 端二维码登录时浏览器标识的提示信息
+
+选择 `WEB 端二维码登录` 并触发程序进行验证后，程序会提示当前所用的浏览器标识，便于与B站的登录操作通知中的 `设备/平台` 信息进行核实对照。
+
+### 4. 解决了文件路径不能含有空格的问题
+
+现已支持输入的文件路径中含有空格。
 
 ## 1.2.0
 
@@ -161,7 +181,7 @@
 
 这直接导致了程序在访问 URL 时选择了位于1081端口的代理。因此，如果这个端口没有代理，就会提示拒绝连接。
 
-![](https://github.com/Naptie/BiliDownload/blob/main/bin/your_debugging.jpg)
+<img src="bin/your_debugging.jpg" alt="">
 
 ### 2. 添加了 Debug 模式
 
@@ -320,4 +340,4 @@ Fiddler 还是带来了希望。
 
 **将被无限重生。**
 
-![](https://github.com/Naptie/BiliDownload/blob/main/bin/example.png)
+<img src="bin/example.png" alt="">

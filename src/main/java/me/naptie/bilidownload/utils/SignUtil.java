@@ -4,7 +4,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class SignUtil {
 
@@ -32,7 +34,7 @@ public class SignUtil {
 	 * 获取给定的参数，通过一定方式生成并返回 API 校验密匙。
 	 *
 	 * @param params 需要 API 校验密匙的 URL 的参数
-	 *            如 appkey=4409e2ce8ffd12b8&auth_code=00021cd91f45209089ee9543b1908f01&local_id=0&ts=1621069332
+	 *               如 appkey=4409e2ce8ffd12b8&auth_code=00021cd91f45209089ee9543b1908f01&local_id=0&ts=1621069332
 	 * @return 生成的 API 校验密匙
 	 */
 	public static String generate(String params) {

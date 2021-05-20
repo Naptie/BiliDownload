@@ -2,13 +2,18 @@ package me.naptie.bilidownload;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import cz.mallat.uasparser.OnlineUpdater;
+import cz.mallat.uasparser.UASparser;
+import me.naptie.bilidownload.objects.Downloader;
 import me.naptie.bilidownload.utils.ConfigManager;
 import me.naptie.bilidownload.utils.HttpManager;
 import me.naptie.bilidownload.utils.LoginManager;
 import me.naptie.bilidownload.utils.SignUtil;
+import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.*;
-import java.net.MalformedURLException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
@@ -60,7 +65,7 @@ public class Main {
 	}
 
 	private static String input() {
-		String input = scanner.next();
+		String input = scanner.nextLine();
 		if (input.equalsIgnoreCase("*exit")) {
 			System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
 			System.exit(0);
@@ -119,6 +124,7 @@ public class Main {
 				sessData = LoginManager.sessData;
 				if (sessData.isEmpty()) {
 					System.out.println("登录失败");
+					System.out.println("本次 WEB 端二维码登录所用 UA 的浏览器为 " + (new UASparser(OnlineUpdater.getVendoredInputStream()).parse(LoginManager.userAgent)).getUaFamily() + "，请于登陆操作通知中核实对照");
 					continue;
 				}
 			} else if (method == 2) {
@@ -145,6 +151,7 @@ public class Main {
 					if (login.getJSONObject("data").getBoolean("isLogin")) {
 						webSuccess = loginSuccess = true;
 						System.out.println("登录成功" + (debug ? "\nID：" + login.getJSONObject("data").getString("uname") + "\nUID：" + login.getJSONObject("data").getIntValue("mid") : ""));
+						System.out.println("本次 WEB 端二维码登录所用 UA 的浏览器为 " + (new UASparser(OnlineUpdater.getVendoredInputStream()).parse(LoginManager.userAgent)).getUaFamily() + "，请于登录操作通知中核实对照");
 						if (hint) System.out.println("请决定是否保存该 SESSDATA（输入“Y”代表是，输入“N”代表否）：");
 						if (input().equalsIgnoreCase("Y")) {
 							if (!config.exists()) config.createNewFile();
@@ -403,8 +410,9 @@ public class Main {
 				}
 				String audioDownloadUrl = getAudioDownload(videoWeb);
 				System.out.println("\n成功获取音频下载地址：" + audioDownloadUrl);
-				File video = ffmpegSuccess == -1 ? new File(path[0], path[1] + ".mp4") : new File(path[0], "tmpVid.mp4");
-				File audio = ffmpegSuccess == -1 ? new File(path[0], path[1] + ".aac") : new File(path[0], "tmpAud.aac");
+				String md5 = DigestUtils.md5Hex(path[1] + System.currentTimeMillis());
+				File video = ffmpegSuccess == -1 ? new File(path[0], path[1] + ".mp4") : new File(path[0], "tmpVid_" + md5 + ".mp4");
+				File audio = ffmpegSuccess == -1 ? new File(path[0], path[1] + ".aac") : new File(path[0], "tmpAud_" + md5 + ".aac");
 				System.out.println("\n正在下载视频至 " + video.getAbsolutePath());
 				long lenVid = downloadFromUrl(videoDownloadUrl, video.getAbsolutePath());
 				videoSuccess = video.length() == lenVid;
@@ -423,6 +431,8 @@ public class Main {
 					} else {
 						System.out.println("合并失败");
 					}
+				} else {
+					System.out.println("\n合并失败");
 				}
 				break;
 			}
@@ -557,53 +567,42 @@ public class Main {
 		else return "无水印";
 	}
 
-	private static long downloadFromUrl(String address, String path) {
-		long beginTime = System.currentTimeMillis();
-		int byteRead;
-		URL url;
-		try {
-			url = new URL(address);
-		} catch (MalformedURLException e1) {
-			e1.printStackTrace();
+	private static long downloadFromUrl(String address, String path) throws IOException {
+		Downloader downloader = new Downloader(address, path);
+		URLConnection request = (new URL(address)).openConnection();
+		request.setRequestProperty("Referer", "https://www.bilibili.com");
+		long totalLen = request.getContentLengthLong();
+		long result = downloader.download(totalLen);
+		double total = totalLen / 1024.0 / 1024.0;
+		System.out.println("文件大小：" + String.format("%,.3f", total) + "MB");
+		if (result == -1) {
+			System.out.println("磁盘空间不足");
 			return -1;
 		}
-		try {
-			URLConnection request = url.openConnection();
-			request.setRequestProperty("Referer", "https://www.bilibili.com");
-			InputStream inStream = request.getInputStream();
-			FileOutputStream fs = new FileOutputStream(path);
-
-			byte[] buffer = new byte[1024];
-			StringBuilder progress = new StringBuilder();
-			double total = request.getContentLengthLong() / 1024.0 / 1024.0;
-			System.out.print("进度：");
-			while ((byteRead = inStream.read(buffer)) != -1) {
-				fs.write(buffer, 0, byteRead);
-				int lastByteLength = progress.toString().getBytes().length;
-				int lastLength = progress.length();
-				if (progress.length() > 0) {
-					for (int i = 0; i < lastByteLength; i++)
-						System.out.print("\b");
-				}
-				double downloaded = fs.getChannel().size() / 1024.0 / 1024.0;
-				double speed = ((System.currentTimeMillis() - beginTime) / 1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
-				progress = new StringBuilder(String.format("%.2f", (fs.getChannel().size() * 100.0 / request.getContentLengthLong())) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed) + "s");
-				for (int i = 0; i <= lastLength - progress.length(); i++)
-					progress.append(" ");
-				System.out.print(progress);
+		StringBuilder progress = new StringBuilder();
+		long downloadedLen = downloader.getDownloaded();
+		double downloaded, speed;
+		while (downloadedLen != totalLen) {
+			int lastLength = progress.length();
+			int lastByteLength = progress.toString().getBytes().length;
+			if (progress.length() > 0) {
+				for (int i = 0; i < lastByteLength; i++)
+					System.out.print("\b");
 			}
-			System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-			String timeSpent = "用时：" + String.format("%,.3f", (System.currentTimeMillis() - beginTime) / 1000.0) + "s";
-			System.out.print(timeSpent);
-			for (int i = 0; i < 13 - timeSpent.length(); i++)
-				System.out.print(" ");
-			inStream.close();
-			fs.close();
-			return request.getContentLengthLong();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return -1;
+			downloadedLen = downloader.getDownloaded();
+			downloaded = downloadedLen / 1024.0 / 1024.0;
+			speed = ((System.currentTimeMillis() - beginTime) / 1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
+			progress = new StringBuilder("进度：" + String.format("%.2f", (downloadedLen * 100.0 / totalLen)) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed).replace("Infinity", "∞") + "s");
+			for (int i = 0; i <= lastLength - progress.length(); i++)
+				progress.append(" ");
+			System.out.print(progress);
 		}
+		System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+		String timeSpent = "用时：" + String.format("%,.3f", (System.currentTimeMillis() - beginTime) / 1000.0) + "s";
+		System.out.print(timeSpent);
+		for (int i = 0; i < 13 - timeSpent.length(); i++)
+			System.out.print(" ");
+		return totalLen;
 	}
 
 }

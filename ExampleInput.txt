@@ -1,7 +1,0 @@
-BV12y4y1q76F
-%your_sessdata%
-2
-7
-E:\Downloads
-1
-D:\ffmpeg-4.1.1-win64-static\bin

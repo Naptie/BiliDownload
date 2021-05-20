@@ -14,7 +14,13 @@ import java.nio.charset.StandardCharsets;
 public class HttpManager {
 
 	public static HttpURLConnection readUrl(String url, String cookie, boolean post, boolean tv) throws IOException {
-		String userAgent = tv ? UserAgentManager.getTVUserAgent() : UserAgentManager.getUserAgent();
+		return readUrl(url, cookie, null, post, tv);
+	}
+
+	public static HttpURLConnection readUrl(String url, String cookie, String userAgent, boolean post, boolean tv) throws IOException {
+		if (userAgent == null) {
+			userAgent = tv ? UserAgentManager.getTVUserAgent() : UserAgentManager.getUserAgent();
+		}
 		if (Main.debug) System.out.println("正在访问 " + url + "，使用 UA“" + userAgent + "”");
 		HttpURLConnection request = (HttpURLConnection) (new URL(url)).openConnection();
 		request.setRequestProperty("User-Agent", userAgent);
@@ -32,6 +38,10 @@ public class HttpManager {
 	}
 
 	public static JSONObject readJsonFromUrl(String url, String cookie, boolean tv) throws IOException {
-		return JSON.parseObject(IOUtils.toString((InputStream) readUrl(url, cookie, false, tv).getContent(), StandardCharsets.UTF_8));
+		return readJsonFromUrl(url, cookie, null, tv);
+	}
+
+	public static JSONObject readJsonFromUrl(String url, String cookie, String userAgent, boolean tv) throws IOException {
+		return JSON.parseObject(IOUtils.toString((InputStream) readUrl(url, cookie, userAgent, false, tv).getContent(), StandardCharsets.UTF_8));
 	}
 }

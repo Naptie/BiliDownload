@@ -1,0 +1,67 @@
+请输入一个 AV 号或 BV 号：
+BV1pK4y1N7gw
+成功使用保存的 TOKEN 登录
+ID：Naptie
+UID：474403243
+
+登录方式：
+  1. WEB 端二维码登录
+  2. TV 端二维码登录
+  3. 输入 SESSDATA 登录
+  4. 跳过登录
+请选择登录方式（输入 1~4 之间的整数）：
+1
+
+请使用B站手机客户端扫描窗口中显示的二维码并确认登录
+登录成功
+本次 WEB 端二维码登录所用 UA 的浏览器为 Chrome，请于登陆操作通知中核实对照
+请决定是否保存该 SESSDATA（输入“Y”代表是，输入“N”代表否）：
+y
+已保存 SESSDATA
+
+正在获取稿件信息······
+
+标题：一位高中生沉迷于写漏洞，这是他的心路变化历程
+UP主：Naptie
+时长：03:24
+播放数：1,462
+弹幕数：5
+获赞数：68
+投币数：26
+收藏数：21
+
+正在获取清晰度信息······
+
+清晰度：
+  1. 超清 4K
+  2. 高清 1080P60
+  3. 高清 1080P
+  4. 高清 720P60
+  5. 清晰 480P
+  6. 流畅 360P
+请选择清晰度（输入 1~6 之间的整数）：
+1
+
+下载选项：
+  1. 视频+音频（合并需要 FFmpeg）
+  2. 仅视频
+  3. 仅音频
+请选择下载选项（输入 1~3 之间的整数）：
+1
+
+成功获取 超清 4K 的视频下载地址：https://upos-sz-mirrorkodo.bilivideo.com/upgcxcode/76/87/332188776/332188776-1-30120.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEqxTEto8BTrNvN0GvT90W5JZMkX_YN0MvXg8gNEV4NC8xNEV4N03eN0B5tZlqNxTEto8BTrNvNeZVuJ10Kj_g2UB02J0mN0B5tZlqNCNEto8BTrNvNC7MTX502C8f2jmMQJ6mqF2fka1mqx6gqj0eN0B599M=&uipk=5&nbs=1&deadline=1621446080&gen=playurlv2&os=kodobv&oi=659485736&trid=165fba752b604ad885b7ff5bc2e4166au&platform=pc&upsig=c2ed28c1a38900571c9ca4ec06f0d808&uparams=e,uipk,nbs,deadline,gen,os,oi,trid,platform&mid=474403243&bvc=vod&orderid=0,3&agrr=1&logo=80000000
+
+成功获取音频下载地址：https://upos-sz-mirrorkodo.bilivideo.com/upgcxcode/76/87/332188776/332188776-1-30280.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEqxTEto8BTrNvN0GvT90W5JZMkX_YN0MvXg8gNEV4NC8xNEV4N03eN0B5tZlqNxTEto8BTrNvNeZVuJ10Kj_g2UB02J0mN0B5tZlqNCNEto8BTrNvNC7MTX502C8f2jmMQJ6mqF2fka1mqx6gqj0eN0B599M=&uipk=5&nbs=1&deadline=1621446080&gen=playurlv2&os=kodobv&oi=659485736&trid=165fba752b604ad885b7ff5bc2e4166au&platform=pc&upsig=c010b66df29664f0dc31b407aa4f1969&uparams=e,uipk,nbs,deadline,gen,os,oi,trid,platform&mid=474403243&bvc=vod&orderid=0,3&agrr=1&logo=80000000
+
+正在下载视频至 E:\Downloads\tmpVid.mp4
+进度：100.00%（203.324MB / 203.324MB）；速度：0.919MB/s；用时：221.259s
+视频下载完毕
+
+正在下载音频至 E:\Downloads\tmpAud.aac
+进度：100.00%（7.740MB / 7.740MB）；速度：0.988MB/s；用时：7.835s
+音频下载完毕
+
+正在合并至 E:\Downloads\一位高中生沉迷于写漏洞，这是他的心路变化历程.mp4
+合并完毕
+
+程序运行结束；总运行时间：04:32.835

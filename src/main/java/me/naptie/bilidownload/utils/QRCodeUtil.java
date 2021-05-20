@@ -29,7 +29,7 @@ public class QRCodeUtil {
 	private static final int OFF_COLOR = 0xFFFFFFFF;
 
 	/**
-	 * @param size    二维码尺寸
+	 * @param size     二维码尺寸
 	 * @param content  二维码内容，必填
 	 * @param logoPath logo 图片路径，若为空则生成不带 logo 的二维码
 	 * @param imgPath  生成二维码文件夹路径

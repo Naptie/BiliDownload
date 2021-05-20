@@ -18,13 +18,14 @@ import java.util.Map;
 
 public class LoginManager {
 
-	public static String sessData, auth, accessToken;
+	public static String sessData, auth, accessToken, userAgent;
 	private static Map<String, List<String>> headers = new HashMap<>();
 	private static JSONObject result = new JSONObject();
 
 	public static void showQRCodeFromWeb() throws IOException {
 		sessData = "*SessData_Not_Yet_Prepared*";
-		JSONObject result = HttpManager.readJsonFromUrl("https://passport.bilibili.com/qrcode/getLoginUrl", "#", false);
+		userAgent = UserAgentManager.getUserAgent();
+		JSONObject result = HttpManager.readJsonFromUrl("https://passport.bilibili.com/qrcode/getLoginUrl", "#", userAgent, false);
 		if (result.getIntValue("code") != 0) {
 			System.out.println("无法获取二维码");
 			sessData = "";
@@ -35,8 +36,9 @@ public class LoginManager {
 
 	public static void showQRCodeFromTV() throws IOException {
 		accessToken = "*Token_Not_Yet_Prepared*";
+		userAgent = UserAgentManager.getTVUserAgent();
 		String params = "appkey=4409e2ce8ffd12b8&local_id=0&ts=" + System.currentTimeMillis();
-		JSONObject result = JSON.parseObject(IOUtils.toString((InputStream) HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code?" + params + "&sign=" + SignUtil.generate(params), "#", true, true).getContent(), StandardCharsets.UTF_8));
+		JSONObject result = JSON.parseObject(IOUtils.toString((InputStream) HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code?" + params + "&sign=" + SignUtil.generate(params), "#", userAgent, true, true).getContent(), StandardCharsets.UTF_8));
 		if (result.getIntValue("code") != 0) {
 			System.out.println("无法获取二维码；错误代码：" + result.getIntValue("code") + "，错误信息：" + result.getString("message"));
 			accessToken = "";
@@ -99,7 +101,7 @@ public class LoginManager {
 	}
 
 	private static boolean detectIfWebScanCompletes() throws IOException {
-		URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + auth, "#", true, false);
+		URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + auth, "#", userAgent, true, false);
 		result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
 		if (result.getIntValue("code") == 0) {
 			if (result.getBoolean("status")) {
@@ -115,7 +117,7 @@ public class LoginManager {
 
 	private static boolean detectIfTVScanCompletes() throws IOException {
 		String params = "appkey=4409e2ce8ffd12b8&auth_code=" + auth + "&local_id=0&ts=" + System.currentTimeMillis();
-		URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/poll?" + params + "&sign=" + SignUtil.generate(params), "#", true, true);
+		URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/poll?" + params + "&sign=" + SignUtil.generate(params), "#", userAgent, true, true);
 		result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
 		if (result.getIntValue("code") == 0 || result.getIntValue("code") == 86038) {
 			headers = request.getHeaderFields();
@@ -127,7 +129,7 @@ public class LoginManager {
 	public static void loginWeb() {
 		if (headers.isEmpty() || result.isEmpty()) {
 			try {
-				URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + auth, "#", true, false);
+				URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/qrcode/getLoginInfo?oauthKey=" + auth, "#", userAgent, true, false);
 				headers = request.getHeaderFields();
 				result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
 			} catch (IOException e) {
@@ -182,7 +184,7 @@ public class LoginManager {
 		if (headers.isEmpty() || result.isEmpty()) {
 			try {
 				String params = "appkey=4409e2ce8ffd12b8&auth_code=" + auth + "&local_id=0&ts=" + System.currentTimeMillis();
-				URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/poll?" + params + "&sign=" + SignUtil.generate(params), "#", true, true);
+				URLConnection request = HttpManager.readUrl("https://passport.bilibili.com/x/passport-tv-login/qrcode/poll?" + params + "&sign=" + SignUtil.generate(params), "#", userAgent, true, true);
 				headers = request.getHeaderFields();
 				result = JSON.parseObject(IOUtils.toString((InputStream) request.getContent(), StandardCharsets.UTF_8));
 			} catch (IOException e) {
