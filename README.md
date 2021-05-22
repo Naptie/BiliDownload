@@ -2,7 +2,8 @@
 <h1 align="center">BiliDownload</h1>
 
 <p align="center">
-    <img src="bin/logo-small.png" alt="">
+    <!--suppress CheckImageSize -->
+<img src="bin/logo-super-ellipse.svg" alt="">
 </p>
 
 <h3 align="center">本项目通过调用B站 WEB 端与 TV 端的 API 实现了对B站视频的下载。</h3>
