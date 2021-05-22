@@ -38,7 +38,7 @@ public class HttpManager {
 	}
 
 	public static JSONObject readJsonFromUrl(String url, String cookie, boolean tv) throws IOException {
-		return readJsonFromUrl(url, cookie, null, tv);
+		return JSON.parseObject(IOUtils.toString((InputStream) readUrl(url, cookie, false, tv).getContent(), StandardCharsets.UTF_8));
 	}
 
 	public static JSONObject readJsonFromUrl(String url, String cookie, String userAgent, boolean tv) throws IOException {

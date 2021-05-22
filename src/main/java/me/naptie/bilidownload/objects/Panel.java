@@ -14,11 +14,9 @@ public class Panel extends java.awt.Panel {
 
 	public Panel(String image, Dimension size) {
 		loadImage(image);
-		// 设定焦点在本窗体
-		setFocusable(true);
+		setFocusable(true); // 设定焦点在本窗体
 		setPreferredSize(size);
-		// 绘制背景
-		drawView();
+		drawView(); // 绘制背景
 	}
 
 	private void loadImage(String image) {

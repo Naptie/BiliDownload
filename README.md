@@ -47,8 +47,8 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.3.0-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
-   ，即输入 `java -jar bili-download-1.3.0-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.3.1-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
+   ，即输入 `java -jar bili-download-1.3.1-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -82,7 +82,9 @@
 
 18. **[如果手动输入了 FFmpeg 路径]** 输入 `Y` 或 `N` 决定是否保存 FFmpeg 路径。
 
-19. 等待下载完毕。下载完成后，若需合并则会生成合并文件并删除源文件。
+19. **[如果文件大小大于或等于 8MB 且从未保存过下载所用线程数]** 输入下载所用线程数。输入数字的最大值不定，且过大易发生代码为416的请求错误。
+
+20. 等待下载完毕。下载完成后，若需合并则会生成合并文件并删除源文件。
 
 ---
 
@@ -108,6 +110,16 @@
 ---
 
 # ChangeLog
+
+## 1.3.1
+
+### 1. 在二维码中添加了 LOGO
+
+在生成 WEB 端二维码时会在其中心添加 `resources` 中的 `logo-super-ellipse-resized.png` 图片，在生成 TV 端二维码时会在其中心添加 `logo-super-ellipse-2-resized.png` 图片。
+
+### 2. 自定义化了多线程下载所用线程数
+
+如果文件大小大于或等于 8MB 且从未保存过下载所用线程数，程序将会询问下载所用线程数。
 
 ## 1.3.0
 

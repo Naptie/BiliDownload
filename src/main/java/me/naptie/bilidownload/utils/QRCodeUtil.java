@@ -7,12 +7,14 @@ import com.google.zxing.client.j2se.MatrixToImageConfig;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import me.naptie.bilidownload.Main;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,21 +31,21 @@ public class QRCodeUtil {
 	private static final int OFF_COLOR = 0xFFFFFFFF;
 
 	/**
-	 * @param size     二维码尺寸
-	 * @param content  二维码内容，必填
-	 * @param logoPath logo 图片路径，若为空则生成不带 logo 的二维码
-	 * @param imgPath  生成二维码文件夹路径
-	 * @param imgName  生成二维码图片名称，必填
-	 * @param suffix   生成二维码图片后缀类型，如 gif，必填
+	 * @param size    二维码尺寸
+	 * @param content 二维码内容，必填
+	 * @param logo    logo 图片名称，若为空则生成不带 logo 的二维码
+	 * @param imgPath 生成二维码文件夹路径
+	 * @param imgName 生成二维码图片名称，必填
+	 * @param suffix  生成二维码图片后缀类型，如 gif，必填
 	 * @author zch
 	 */
-	public static boolean generateQRImage(Dimension size, String content, String logoPath, String imgPath, String imgName, String suffix) {
+	public static boolean generateQRImage(Dimension size, String content, String logo, String imgPath, String imgName, String suffix) {
 		if (content == null || imgName == null || suffix == null) {
 			return false;
 		}
 		try {
-			if (logoPath != null && !"".equals(logoPath.trim())) {
-				QREncode(size.width, size.height, content, logoPath, imgPath, imgName, suffix);
+			if (logo != null && !"".equals(logo.trim())) {
+				QREncode(size.width, size.height, content, logo, imgPath, imgName, suffix);
 			} else {
 				QREncode(size.width, size.height, content, imgPath, imgName, suffix);
 			}
@@ -74,7 +76,7 @@ public class QRCodeUtil {
 
 	// 带 logo
 	@SuppressWarnings("DuplicatedCode")
-	private static void QREncode(int width, int height, String content, String logoPath, String imgPath, String imgName, String suffix)
+	private static void QREncode(int width, int height, String content, String logo, String imgPath, String imgName, String suffix)
 			throws Exception {
 		File filePath = new File(imgPath);
 		if (!filePath.exists())
@@ -89,24 +91,24 @@ public class QRCodeUtil {
 		hints.put(EncodeHintType.MARGIN, 1);
 		BitMatrix bitMatrix = new MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, width, height, hints);
 		MatrixToImageConfig matrixToImageConfig = new MatrixToImageConfig(ON_COLOR, OFF_COLOR);
-		BufferedImage bufferedImage = addLogo(MatrixToImageWriter.toBufferedImage(bitMatrix, matrixToImageConfig), new File(logoPath));
+		BufferedImage bufferedImage = addLogo(MatrixToImageWriter.toBufferedImage(bitMatrix, matrixToImageConfig), Main.class.getClassLoader().getResourceAsStream(logo));
 		ImageIO.write(bufferedImage, suffix, imageFile);// 输出带logo图片
 	}
 
-	private static BufferedImage addLogo(BufferedImage matrixImage, File logoFile)
+	private static BufferedImage addLogo(BufferedImage matrixImage, InputStream logoStream)
 			throws IOException {
 		// 读取二维码图片，并构建绘图对象
 		Graphics2D gs = matrixImage.createGraphics();
 		int matrixWidth = matrixImage.getWidth();
-		int matrixHeigh = matrixImage.getHeight();
+		int matrixHeight = matrixImage.getHeight();
 		int ratioWidth = matrixWidth * 2 / 10;
-		int ratioHeight = matrixHeigh * 2 / 10;
+		int ratioHeight = matrixHeight * 2 / 10;
 		// 读取 logo 图片
-		BufferedImage logo = ImageIO.read(logoFile);
+		BufferedImage logo = ImageIO.read(logoStream);
 		int logoWidth = Math.min(logo.getWidth(null), ratioWidth);
 		int logoHeight = Math.min(logo.getHeight(null), ratioHeight);
 		int x = (matrixWidth - logoWidth) / 2;
-		int y = (matrixHeigh - logoHeight) / 2;
+		int y = (matrixHeight - logoHeight) / 2;
 
 		// 绘制
 		gs.drawImage(logo, x, y, logoWidth, logoHeight, null);

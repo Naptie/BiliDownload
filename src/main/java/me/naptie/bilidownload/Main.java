@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -124,7 +125,7 @@ public class Main {
 				sessData = LoginManager.sessData;
 				if (sessData.isEmpty()) {
 					System.out.println("登录失败");
-					System.out.println("本次 WEB 端二维码登录所用 UA 的浏览器为 " + (new UASparser(OnlineUpdater.getVendoredInputStream()).parse(LoginManager.userAgent)).getUaFamily() + "，请于登陆操作通知中核实对照");
+					System.out.println("本次 WEB 端二维码登录所用 UA 的浏览器为 " + (new UASparser(OnlineUpdater.getVendoredInputStream()).parse(LoginManager.userAgent)).getUaFamily());
 					continue;
 				}
 			} else if (method == 2) {
@@ -399,15 +400,12 @@ public class Main {
 							if (hint) System.out.println("已保存 FFmpeg 路径");
 						}
 					}
+					if (ffmpegSuccess == 0) {
+						System.out.println("该目录不存在 ffmpeg.exe");
+					}
 				}
 				boolean videoSuccess, audioSuccess;
-				if (videoDownloadUrl == null) {
-					System.out.print("\n无法获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址，已为您选择目前可用的最佳清晰度 " + getQualityDescription(videoWeb, videoWeb.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getIntValue("id")));
-					videoDownloadUrl = videoWeb.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getString("base_url");
-					System.out.println("；下载地址：" + videoDownloadUrl);
-				} else {
-					System.out.println("\n成功获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址：" + videoDownloadUrl);
-				}
+				videoDownloadUrl = validateVideoUrl(videoDownloadUrl, qualities, quality, videoWeb);
 				String audioDownloadUrl = getAudioDownload(videoWeb);
 				System.out.println("\n成功获取音频下载地址：" + audioDownloadUrl);
 				String md5 = DigestUtils.md5Hex(path[1] + System.currentTimeMillis());
@@ -438,13 +436,7 @@ public class Main {
 			}
 			case 2: {
 				boolean videoSuccess;
-				if (videoDownloadUrl == null) {
-					System.out.print("\n无法获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址，已为您选择目前可用的最佳清晰度 " + getQualityDescription(videoWeb, videoWeb.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getIntValue("id")));
-					videoDownloadUrl = videoWeb.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getString("base_url");
-					System.out.println("；下载地址：" + videoDownloadUrl);
-				} else {
-					System.out.println("\n成功获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址：" + videoDownloadUrl);
-				}
+				videoDownloadUrl = validateVideoUrl(videoDownloadUrl, qualities, quality, videoWeb);
 				File video = new File(path[0], path[1] + ".mp4");
 				System.out.println("\n正在下载至 " + video.getAbsolutePath());
 				long len = downloadFromUrl(videoDownloadUrl, video.getAbsolutePath());
@@ -464,6 +456,17 @@ public class Main {
 				break;
 			}
 		}
+	}
+
+	private static String validateVideoUrl(String videoDownloadUrl, JSONArray qualities, int quality, JSONObject videoWeb) {
+		if (videoDownloadUrl == null) {
+			System.out.print("\n无法获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址，已为您选择目前可用的最佳清晰度 " + getQualityDescription(videoWeb, videoWeb.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getIntValue("id")));
+			videoDownloadUrl = videoWeb.getJSONObject("dash").getJSONArray("video").getJSONObject(0).getString("base_url");
+			System.out.println("；下载地址：" + videoDownloadUrl);
+		} else {
+			System.out.println("\n成功获取 " + qualities.getString(quality).replaceAll(" +", " ") + " 的视频下载地址：" + videoDownloadUrl);
+		}
+		return videoDownloadUrl;
 	}
 
 	private static String getFormattedTime(int time, boolean hour) {
@@ -489,6 +492,11 @@ public class Main {
 				System.out.println("指定的文件“" + f.getAbsolutePath() + "”不存在");
 				return null;
 			}
+		}
+		File disk = Paths.get(output.getAbsolutePath()).getRoot().toFile().getAbsoluteFile();
+		if (disk.getUsableSpace() < video.length() + audio.length()) {
+			System.out.println("磁盘空间不足");
+			return null;
 		}
 		if (output.exists())
 			//noinspection ResultOfMethodCallIgnored
@@ -568,13 +576,53 @@ public class Main {
 	}
 
 	private static long downloadFromUrl(String address, String path) throws IOException {
-		Downloader downloader = new Downloader(address, path);
 		URLConnection request = (new URL(address)).openConnection();
 		request.setRequestProperty("Referer", "https://www.bilibili.com");
 		long totalLen = request.getContentLengthLong();
-		long result = downloader.download(totalLen);
+		int threadAmount;
+		if (totalLen < 8388608L) {
+			threadAmount = (int) totalLen / 1024 / 1024;
+		} else {
+			threadAmount = 8;
+			boolean threadAmountSuccess = false;
+			if (config.exists()) {
+				ConfigManager.init(config);
+				Map<String, Object> map = ConfigManager.get();
+				if (map == null)
+					map = new LinkedHashMap<>();
+				if (map.containsKey("thread-amount")) {
+					threadAmount = (Integer) map.get("thread-amount");
+					if (threadAmount >= 1) {
+						threadAmountSuccess = true;
+						if (debug) System.out.println("\n成功获取下载所用线程数：" + threadAmount);
+					}
+				}
+			}
+			if (!threadAmountSuccess) {
+				if (hint) System.out.println("\n请决定下载所用线程数（输入 1~N 之间的整数，N 不定，且过大可能导致 416 错误）：");
+				threadAmount = inputInt();
+				if (threadAmount < 1) {
+					threadAmount = 1;
+				}
+				if (hint) System.out.println("请决定是否保存下载所用线程数（输入“Y”代表是，输入“N”代表否）：");
+				if (input().equalsIgnoreCase("Y")) {
+					if (!config.exists()) config.createNewFile();
+					ConfigManager.init(config);
+					Map<String, Object> map = ConfigManager.get();
+					if (map == null)
+						map = new LinkedHashMap<>();
+					map.put("thread-amount", threadAmount);
+					ConfigManager.dump(map);
+					if (hint) System.out.println("已保存下载所用线程数");
+				}
+			}
+		}
+		Downloader downloader = new Downloader(address, path, threadAmount);
 		double total = totalLen / 1024.0 / 1024.0;
-		System.out.println("文件大小：" + String.format("%,.3f", total) + "MB");
+		System.out.println("文件大小：" + String.format("%,.3f", total) + (debug ? "MB（" + totalLen + "B）" : "MB"));
+		System.out.println("下载所用线程数：" + threadAmount);
+		long beginTime = System.currentTimeMillis();
+		long result = downloader.download(totalLen);
 		if (result == -1) {
 			System.out.println("磁盘空间不足");
 			return -1;
@@ -583,13 +631,21 @@ public class Main {
 		long downloadedLen = downloader.getDownloaded();
 		double downloaded, speed;
 		while (downloadedLen != totalLen) {
+			downloadedLen = downloader.getDownloaded();
+			if (debug && downloadedLen < Math.min(totalLen / 500, 32)) {
+				continue;
+			}
+			for (int i = 0; i < threadAmount; i++) {
+				if (downloader.isInterrupted(downloader.getThreads().get(i))) {
+					return -1;
+				}
+			}
 			int lastLength = progress.length();
 			int lastByteLength = progress.toString().getBytes().length;
 			if (progress.length() > 0) {
 				for (int i = 0; i < lastByteLength; i++)
 					System.out.print("\b");
 			}
-			downloadedLen = downloader.getDownloaded();
 			downloaded = downloadedLen / 1024.0 / 1024.0;
 			speed = ((System.currentTimeMillis() - beginTime) / 1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
 			progress = new StringBuilder("进度：" + String.format("%.2f", (downloadedLen * 100.0 / totalLen)) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed).replace("Infinity", "∞") + "s");

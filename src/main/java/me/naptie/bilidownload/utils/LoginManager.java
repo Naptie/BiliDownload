@@ -66,7 +66,15 @@ public class LoginManager {
 				size.setSize(size.width, size.width);
 			}
 		}
-		QRCodeUtil.generateQRImage(size, url, null, System.getProperty("user.dir"), imageName, "png");
+		if (!QRCodeUtil.generateQRImage(size, url, "logo-super-ellipse" + (tv ? "-2" : "") + "-resized.png", System.getProperty("user.dir"), imageName, "png")) {
+			System.out.println("加载二维码时出现错误");
+			if (tv) {
+				accessToken = "";
+			} else {
+				sessData = "";
+			}
+			return;
+		}
 		System.out.println();
 		if (Main.debug) System.out.println(platform + " 端二维码登录所用的密钥为 " + auth);
 		System.out.println("请使用B站手机客户端扫描窗口中显示的二维码并确认登录");

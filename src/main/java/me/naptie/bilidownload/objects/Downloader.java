@@ -1,5 +1,7 @@
 package me.naptie.bilidownload.objects;
 
+import me.naptie.bilidownload.Main;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,15 +14,16 @@ import java.util.List;
 
 // 原帖：https://blog.csdn.net/fzy629442466/article/details/85601315
 public class Downloader {
-	private static final int THREAD_AMOUNT = 32;
 	private final URL url;
 	private final File file;
 	private final List<DownloadThread> THREADS = new ArrayList<>();
-	private long threadLen;
+	private final int THREAD_AMOUNT;
+	private long threadLen, totalLen;
 
-	public Downloader(String address, String path) throws IOException {
+	public Downloader(String address, String path, int threadAmount) throws IOException {
 		url = new URL(address);
 		file = new File(path);
+		THREAD_AMOUNT = threadAmount;
 	}
 
 	public long download(long totalLen) throws IOException {
@@ -28,20 +31,16 @@ public class Downloader {
 		if (disk.getUsableSpace() < totalLen) {
 			return -1;
 		}
+		this.totalLen = totalLen;
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestProperty("Referer", "https://www.bilibili.com");
 		conn.setConnectTimeout(5000);
-//		while (conn.getContentLength() == -1) {
-//			conn.connect();
-//			System.out.println("正在获取文件大小······");
-//		}
-//		int totalLen = conn.getContentLength();                                     // 获取文件长度
-		threadLen = (totalLen + THREAD_AMOUNT - 1) / THREAD_AMOUNT;                 // 计算每个线程要下载的长度
-		RandomAccessFile raf = new RandomAccessFile(file, "rws");             // 在本地创建一个和服务端大小相同的文件
-		raf.setLength(totalLen);                                                    // 设置文件的大小
+		threadLen = (totalLen + THREAD_AMOUNT - 1) / THREAD_AMOUNT; // 计算每个线程要下载的长度
+		RandomAccessFile raf = new RandomAccessFile(file, "rws"); // 在本地创建一个和服务端大小相同的文件
+		raf.setLength(totalLen); // 设置文件的大小
 		raf.close();
 
-		for (int i = 0; i < THREAD_AMOUNT; i++) {                                   // 开启8条线程, 每个线程下载一部分数据到本地文件中
+		for (int i = 0; i < THREAD_AMOUNT; i++) { // 开启 THREAD_AMOUNT 条线程, 每个线程下载一部分数据到本地文件中
 			DownloadThread thread = new DownloadThread(i);
 			THREADS.add(thread);
 			thread.start();
@@ -57,27 +56,39 @@ public class Downloader {
 		return downloaded;
 	}
 
-	private class DownloadThread extends Thread {
+	public List<DownloadThread> getThreads() {
+		return THREADS;
+	}
+
+	public boolean isInterrupted(DownloadThread thread) {
+		return !thread.isFinished() && thread.isInterrupted();
+	}
+
+	public class DownloadThread extends Thread {
 		private final int id;
 		private long downloaded = 0L;
+		private boolean finished = false;
 
 		public DownloadThread(int id) {
 			this.id = id;
 		}
 
 		public void run() {
-			long start = id * threadLen;                                             // 起始位置
-			long end = id * threadLen + threadLen - 1;                               // 结束位置
-//			System.out.println("线程" + id + ": " + start + " - " + end);
+			long start = id * threadLen; // 起始位置
+			long end = (id + 1) * threadLen - 1; // 结束位置
+			if (end >= totalLen) {
+				end = totalLen - 1;
+			}
+			if (Main.debug) System.out.println("线程" + id + "开始下载 " + start + "B - " + end + "B 之间的数据");
 
 			try {
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 				conn.setConnectTimeout(5000);
-				conn.setRequestProperty("Range", "bytes=" + start + "-" + end);     // 设置当前线程下载的范围
+				conn.setRequestProperty("Range", "bytes=" + start + "-" + end); // 设置当前线程下载的范围
 				conn.setRequestProperty("Referer", "https://www.bilibili.com");
 				InputStream in = conn.getInputStream();
 				RandomAccessFile raf = new RandomAccessFile(file, "rws");
-				raf.seek(start);                                                    // 设置保存数据的位置
+				raf.seek(start); // 设置保存数据的位置
 
 				byte[] buffer = new byte[1024];
 				int len;
@@ -88,14 +99,20 @@ public class Downloader {
 				}
 				raf.close();
 //				System.out.println("线程" + id + "下载完毕");
+				finished = true;
+				this.interrupt();
 			} catch (IOException e) {
-				System.out.println("\n线程" + id + "在请求 " + start + " - " + end + " 范围间的数据时遇到了以下错误：");
-				e.printStackTrace();
+				this.interrupt();
+				System.out.println("\n线程" + id + "在请求 " + start + "B - " + end + "B 范围间的数据时遇到了以下错误：\n" + e.getLocalizedMessage());
 			}
 		}
 
 		public long getDownloaded() {
 			return downloaded;
+		}
+
+		public boolean isFinished() {
+			return finished;
 		}
 	}
 }
