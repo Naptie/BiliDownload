@@ -48,8 +48,8 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.3.1-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
-   ，即输入 `java -jar bili-download-1.3.1-jar-with-dependencies.jar debug`，这将显示一些调试信息。
+2. 输入 `java -jar bili-download-1.3.2-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中添加 `debug`
+   ，即输入 `java -jar bili-download-1.3.2-jar-with-dependencies.jar debug`，这将显示一些调试信息。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -111,6 +111,12 @@
 ---
 
 # ChangeLog
+
+## 1.3.2
+
+### 解决了如图所示的问题
+
+<img src="bin/arithmetic_exception.png" alt="">
 
 ## 1.3.1
 

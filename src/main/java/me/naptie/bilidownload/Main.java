@@ -582,6 +582,9 @@ public class Main {
 		int threadAmount;
 		if (totalLen < 8388608L) {
 			threadAmount = (int) totalLen / 1024 / 1024;
+			if (threadAmount < 1) {
+				threadAmount = 1;
+			}
 		} else {
 			threadAmount = 8;
 			boolean threadAmountSuccess = false;
@@ -602,6 +605,7 @@ public class Main {
 				if (hint) System.out.println("\n请决定下载所用线程数（输入 1~N 之间的整数，N 不定，且过大可能导致 416 错误）：");
 				threadAmount = inputInt();
 				if (threadAmount < 1) {
+					System.out.println("输入的数字“" + threadAmount + "”太小，已为您决定使用单线程下载");
 					threadAmount = 1;
 				}
 				if (hint) System.out.println("请决定是否保存下载所用线程数（输入“Y”代表是，输入“N”代表否）：");
