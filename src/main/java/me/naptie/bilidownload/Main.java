@@ -30,8 +30,15 @@ public class Main {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		beginTime = System.currentTimeMillis();
-		debug = args.length > 0 && args[0].equalsIgnoreCase("debug");
 		config = new File("config.yml");
+		if (args.length > 2 && args[0].equalsIgnoreCase("direct")) {
+			String url = args[1];
+			String path = args[2];
+			downloadFromUrl(url, path);
+			System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
+			System.exit(0);
+		}
+		debug = args.length > 0 && args[0].equalsIgnoreCase("debug");
 		setScanner();
 		String id = getNumber();
 		String[] login = login();
@@ -41,6 +48,7 @@ public class Main {
 		String[] path = getPath((String) specified[1]);
 		download(details, path);
 		System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
+		System.exit(0);
 	}
 
 	private static void setScanner() throws FileNotFoundException {
@@ -254,6 +262,7 @@ public class Main {
 		System.out.println("\n正在获取清晰度信息······");
 		String videoUrlTV = "https://api.snm0516.aisee.tv/x/tv/ugc/playurl?avid=" + info.getIntValue("aid") + "&mobi_app=android_tv_yst&fnval=80&qn=120&cid=" + cid + (tv ? "&access_key=" + auth[1] : "") + "&fourk=1&platform=android&device=android&build=103800&fnver=0";
 		String videoUrlWeb = "https://api.bilibili.com/x/player/playurl?avid=" + info.getIntValue("aid") + "&cid=" + cid + "&fnval=80&fourk=1";
+//		String videoUrlWebPGC = "https://api.bilibili.com/pgc/player/web/playurl?cid=" + cid + "&qn=120&fourk=1&fnver=0&fnval=80";
 		JSONObject videoTV = HttpManager.readJsonFromUrl(videoUrlTV, "#", true);
 		JSONObject videoWeb = HttpManager.readJsonFromUrl(videoUrlWeb, auth[0], false).getJSONObject("data");
 		JSONArray qualitiesTV = videoTV.getJSONArray("accept_description");
@@ -579,7 +588,7 @@ public class Main {
 		long remainingSizeLen = calcRemainingSize(status);
 		int threadAmount = status.size();
 		double remainingSize = remainingSizeLen / 1024.0 / 1024.0;
-		System.out.println("剩余文件大小：" + String.format("%,.3f", remainingSize) + (debug ? "MB（" + remainingSizeLen + "B）" : "MB"));
+		System.out.println("\n剩余文件大小：" + String.format("%,.3f", remainingSize) + (debug ? "MB（" + remainingSizeLen + "B）" : "MB"));
 		System.out.println("下载所用线程数：" + threadAmount);
 		System.out.println("本次是第" + tries + "次重试，若数次下载失败请考虑强制退出程序");
 		long beginTime = System.currentTimeMillis();
