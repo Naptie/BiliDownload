@@ -18,10 +18,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class Main {
@@ -520,11 +517,13 @@ public class Main {
 
 	private static JSONArray summarize(JSONArray qualitiesTV, JSONArray qualitiesWeb, JSONObject videoTV) {
 		boolean watermark = true;
-		JSONArray watermarks = videoTV.getJSONArray("accept_watermark");
-		for (int i = 0; i < watermarks.size(); i++) {
-			if (!watermarks.getBoolean(i)) {
-				watermark = false;
-				break;
+		if (videoTV.getIntValue("code") == 0) {
+			JSONArray watermarks = videoTV.getJSONArray("accept_watermark");
+			for (int i = 0; i < watermarks.size(); i++) {
+				if (!watermarks.getBoolean(i)) {
+					watermark = false;
+					break;
+				}
 			}
 		}
 		JSONArray qualities = new JSONArray();
@@ -575,6 +574,78 @@ public class Main {
 		else return "无水印";
 	}
 
+	private static long downloadFromUrl(String address, String path, List<Map.Entry<Long, Long>> status, int tries) throws IOException {
+		Downloader downloader = new Downloader(address, path, status);
+		long remainingSizeLen = calcRemainingSize(status);
+		int threadAmount = status.size();
+		double remainingSize = remainingSizeLen / 1024.0 / 1024.0;
+		System.out.println("剩余文件大小：" + String.format("%,.3f", remainingSize) + (debug ? "MB（" + remainingSizeLen + "B）" : "MB"));
+		System.out.println("下载所用线程数：" + threadAmount);
+		System.out.println("本次是第" + tries + "次重试，若数次下载失败请考虑强制退出程序");
+		long beginTime = System.currentTimeMillis();
+		short result = downloader.download();
+		if (result == -1) {
+			System.out.println("磁盘空间不足");
+			return -1;
+		}
+		if (result == -2) {
+			System.out.println("线程详情为空");
+			return -2;
+		}
+		StringBuilder progress = new StringBuilder();
+		long downloadedLen = downloader.getDownloaded(), time;
+		Deque<Long> prevLensInTenSec = new LinkedList<>(), prevLensInHalfSec = new LinkedList<>();
+		double downloaded, speed, averageSpeed, instantaneousSpeed;
+
+		while (downloadedLen != remainingSizeLen) {
+			time = System.currentTimeMillis() - beginTime;
+			downloadedLen = downloader.getDownloaded();
+			if (debug && downloadedLen < Math.min(remainingSizeLen / 500, 32)) {
+				continue;
+			}
+			for (int i = 0; i < threadAmount; i++) {
+				if (downloader.isInterrupted(downloader.getThreads().get(i))) {
+					return -1;
+				}
+			}
+			downloaded = downloadedLen / 1024.0 / 1024.0;
+			prevLensInTenSec.addLast(downloadedLen);
+			prevLensInHalfSec.addLast(downloadedLen);
+			speed = (time / 1000 == 0) ? 0 : (time > 10000 ? downloaded - (prevLensInTenSec.getFirst() / 1024.0 / 1024.0) : downloaded) / (time > 10000 ? 10 : time / 1000.0);
+			instantaneousSpeed = (time / 100 == 0) ? 0 : (time > 500 ? downloaded - (prevLensInHalfSec.getFirst() / 1024.0 / 1024.0) : downloaded) / (time > 500 ? 0.5 : time / 1000.0);
+			averageSpeed = (time / 1000 == 0) ? 0 : downloaded / (time / 1000.0);
+			if (time > 10000) {
+				prevLensInTenSec.removeFirst();
+				if (speed == 0) {
+					System.out.println("\n下载中断，已下载 " + String.format("%,.3f", downloaded) + (debug ? "MB（" + downloadedLen + "B）" : "MB") + "；正在尝试继续下载");
+					return downloadedLen + downloadFromUrl(address, path, downloader.cancel(), tries + 1);
+				}
+			}
+			if (time > 500) {
+				prevLensInHalfSec.removeFirst();
+			}
+
+			int lastLength = progress.length();
+			int lastByteLength = progress.toString().getBytes().length;
+			if (progress.length() > 0) {
+				for (int i = 0; i < lastByteLength; i++)
+					System.out.print("\b");
+			}
+
+			progress = new StringBuilder("进度：" + String.format("%.2f", (downloadedLen * 100.0 / remainingSizeLen)) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", remainingSize) + "MB）；瞬时速度：" + String.format("%,.3f", instantaneousSpeed) + "MB/s；平均速度：" + String.format("%,.3f", averageSpeed) + "MB/s；剩余时间：" + String.format("%,.3f", (remainingSize - downloaded) / averageSpeed).replace("Infinity", "∞") + "s");
+			for (int i = 0; i <= lastLength - progress.length(); i++)
+				progress.append(" ");
+			System.out.print(progress);
+		}
+
+		System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+		String timeSpent = "用时：" + String.format("%,.3f", (System.currentTimeMillis() - beginTime) / 1000.0) + "s";
+		System.out.print(timeSpent);
+		for (int i = 0; i < 13 - timeSpent.length(); i++)
+			System.out.print(" ");
+		return remainingSizeLen;
+	}
+
 	private static long downloadFromUrl(String address, String path) throws IOException {
 		URLConnection request = (new URL(address)).openConnection();
 		request.setRequestProperty("Referer", "https://www.bilibili.com");
@@ -602,7 +673,7 @@ public class Main {
 				}
 			}
 			if (!threadAmountSuccess) {
-				if (hint) System.out.println("\n请决定下载所用线程数（输入 1~N 之间的整数，N 不定，且过大可能导致 416 错误）：");
+				if (hint) System.out.println("\n请决定下载所用线程数（输入 1~N 之间的整数，N 不定，且过大可能导致416错误）：");
 				threadAmount = inputInt();
 				if (threadAmount < 1) {
 					System.out.println("输入的数字“" + threadAmount + "”太小，已为您决定使用单线程下载");
@@ -632,9 +703,12 @@ public class Main {
 			return -1;
 		}
 		StringBuilder progress = new StringBuilder();
-		long downloadedLen = downloader.getDownloaded();
-		double downloaded, speed;
+		long downloadedLen = downloader.getDownloaded(), time;
+		Deque<Long> prevLensInTenSec = new LinkedList<>(), prevLensInHalfSec = new LinkedList<>();
+		double downloaded, speed, averageSpeed, instantaneousSpeed;
+
 		while (downloadedLen != totalLen) {
+			time = System.currentTimeMillis() - beginTime;
 			downloadedLen = downloader.getDownloaded();
 			if (debug && downloadedLen < Math.min(totalLen / 500, 32)) {
 				continue;
@@ -644,25 +718,53 @@ public class Main {
 					return -1;
 				}
 			}
+			downloaded = downloadedLen / 1024.0 / 1024.0;
+			prevLensInTenSec.addLast(downloadedLen);
+			prevLensInHalfSec.addLast(downloadedLen);
+			speed = (time / 1000 == 0) ? 0 : (time > 10000 ? downloaded - (prevLensInTenSec.getFirst() / 1024.0 / 1024.0) : downloaded) / (time > 10000 ? 10 : time / 1000.0);
+//			System.out.print("Speed = " + (time > 10000 ? downloaded - (prevLensInTenSec.getFirst() / 1024.0 / 1024.0) : downloaded) + " / " + (time > 10000 ? 10 : time / 1000.0) + " = " + speed);
+			instantaneousSpeed = (time / 100 == 0) ? 0 : (time > 500 ? downloaded - (prevLensInHalfSec.getFirst() / 1024.0 / 1024.0) : downloaded) / (time > 500 ? 0.5 : time / 1000.0);
+//			System.out.println(" Instantaneous Speed = (" + downloaded + " - " + (prevLensInHalfSec.getFirst() / 1024.0 / 1024.0) + ") / " + (time > 500 ? 0.5 : time / 1000.0) + " = " + instantaneousSpeed);
+			averageSpeed = (time / 1000 == 0) ? 0 : downloaded / (time / 1000.0);
+//			System.out.println(" Average Speed = " + downloaded + " / " + time / 1000.0);
+			if (time > 10000) {
+				prevLensInTenSec.removeFirst();
+				if (speed == 0) {
+					System.out.println("\n下载中断，已下载 " + String.format("%,.3f", downloaded) + (debug ? "MB（" + downloadedLen + "B）" : "MB") + "；正在尝试继续下载");
+					return downloadedLen + downloadFromUrl(address, path, downloader.cancel(), 1);
+				}
+			}
+			if (time > 500 && prevLensInHalfSec.size() > 0) {
+				prevLensInHalfSec.removeFirst();
+			}
+
 			int lastLength = progress.length();
 			int lastByteLength = progress.toString().getBytes().length;
 			if (progress.length() > 0) {
 				for (int i = 0; i < lastByteLength; i++)
 					System.out.print("\b");
 			}
-			downloaded = downloadedLen / 1024.0 / 1024.0;
-			speed = ((System.currentTimeMillis() - beginTime) / 1000.0 == 0) ? 0 : downloaded / ((System.currentTimeMillis() - beginTime) / 1000.0);
-			progress = new StringBuilder("进度：" + String.format("%.2f", (downloadedLen * 100.0 / totalLen)) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；速度：" + String.format("%,.3f", speed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / speed).replace("Infinity", "∞") + "s");
+
+			progress = new StringBuilder("进度：" + String.format("%.2f", (downloadedLen * 100.0 / totalLen)) + "%（" + String.format("%,.3f", downloaded) + "MB / " + String.format("%,.3f", total) + "MB）；瞬时速度：" + String.format("%,.3f", instantaneousSpeed) + "MB/s；平均速度：" + String.format("%,.3f", averageSpeed) + "MB/s；剩余时间：" + String.format("%,.3f", (total - downloaded) / averageSpeed).replace("Infinity", "∞") + "s");
 			for (int i = 0; i <= lastLength - progress.length(); i++)
 				progress.append(" ");
 			System.out.print(progress);
 		}
+
 		System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 		String timeSpent = "用时：" + String.format("%,.3f", (System.currentTimeMillis() - beginTime) / 1000.0) + "s";
 		System.out.print(timeSpent);
 		for (int i = 0; i < 13 - timeSpent.length(); i++)
 			System.out.print(" ");
 		return totalLen;
+	}
+
+	private static long calcRemainingSize(List<Map.Entry<Long, Long>> status) {
+		long toDownload = 0L;
+		for (Map.Entry<Long, Long> entry : status) {
+			toDownload += entry.getValue() - entry.getKey();
+		}
+		return toDownload;
 	}
 
 }

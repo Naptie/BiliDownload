@@ -11,19 +11,62 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 // 原帖：https://blog.csdn.net/fzy629442466/article/details/85601315
+@SuppressWarnings("deprecation")
 public class Downloader {
 	private final URL url;
 	private final File file;
 	private final List<DownloadThread> THREADS = new ArrayList<>();
 	private final int THREAD_AMOUNT;
 	private long threadLen, totalLen;
+	private List<Map.Entry<Long, Long>> status;
 
 	public Downloader(String address, String path, int threadAmount) throws IOException {
 		url = new URL(address);
 		file = new File(path);
 		THREAD_AMOUNT = threadAmount;
+	}
+
+	public Downloader(String address, String path, List<Map.Entry<Long, Long>> status) throws IOException {
+		url = new URL(address);
+		file = new File(path);
+		THREAD_AMOUNT = status.size();
+		this.status = status;
+	}
+
+	public List<Map.Entry<Long, Long>> cancel() {
+		List<Map.Entry<Long, Long>> status = new ArrayList<>();
+		for (int i = 0; i < THREAD_AMOUNT; i++) {
+			Map.Entry<Long, Long> entry = THREADS.get(i).getToDownload();
+			if (!THREADS.get(i).isFinished()) {
+				status.add(entry);
+//				if (Main.debug) System.out.println("线程" + i + "已下载到 " + entry.getKey() + "B，目标为 " + entry.getValue() + "B");
+			}
+			THREADS.get(i).stop();
+			if (Main.debug) System.out.println("已中止线程" + i);
+		}
+		return status;
+	}
+
+	public short download() {
+		File disk = Paths.get(file.getAbsolutePath()).getRoot().toFile().getAbsoluteFile();
+		if (disk.getUsableSpace() < totalLen) {
+			return -1;
+		}
+		if (status == null) {
+			return -2;
+		}
+
+		for (int i = 0; i < THREAD_AMOUNT; i++) {
+			DownloadThread thread = new DownloadThread(i);
+			THREADS.add(thread);
+			thread.setStart(status.get(i).getKey());
+			thread.setEnd(status.get(i).getValue());
+			thread.start();
+		}
+		return 0;
 	}
 
 	public long download(long totalLen) throws IOException {
@@ -66,7 +109,7 @@ public class Downloader {
 
 	public class DownloadThread extends Thread {
 		private final int id;
-		private long downloaded = 0L;
+		private long downloaded = 0L, start = -1, end = -1;
 		private boolean finished = false;
 
 		public DownloadThread(int id) {
@@ -74,10 +117,18 @@ public class Downloader {
 		}
 
 		public void run() {
-			long start = id * threadLen; // 起始位置
-			long end = (id + 1) * threadLen - 1; // 结束位置
-			if (end >= totalLen) {
-				end = totalLen - 1;
+			if (start == -1) {
+				start = id * threadLen; // 起始位置
+				if (start >= totalLen) {
+					finished = true;
+					this.stop();
+				}
+			}
+			if (end == -1) {
+				end = (id + 1) * threadLen - 1; // 结束位置
+				if (end >= totalLen) {
+					end = totalLen - 1;
+				}
 			}
 			if (Main.debug) System.out.println("线程" + id + "开始下载 " + start + "B - " + end + "B 之间的数据");
 
@@ -100,11 +151,38 @@ public class Downloader {
 				raf.close();
 //				System.out.println("线程" + id + "下载完毕");
 				finished = true;
-				this.interrupt();
+				this.stop();
 			} catch (IOException e) {
-				this.interrupt();
+				this.stop();
 				System.out.println("\n线程" + id + "在请求 " + start + "B - " + end + "B 范围间的数据时遇到了以下错误：\n" + e.getLocalizedMessage());
 			}
+		}
+
+		public void setStart(long start) {
+			this.start = start;
+		}
+
+		public void setEnd(long end) {
+			this.end = end;
+		}
+
+		public Map.Entry<Long, Long> getToDownload() {
+			return new Map.Entry<Long, Long>() {
+				@Override
+				public Long getKey() {
+					return start + downloaded;
+				}
+
+				@Override
+				public Long getValue() {
+					return end;
+				}
+
+				@Override
+				public Long setValue(Long value) {
+					return null;
+				}
+			};
 		}
 
 		public long getDownloaded() {
