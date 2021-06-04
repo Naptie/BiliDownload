@@ -49,7 +49,13 @@
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
 2. 输入 `java -jar bili-download-1.3.5-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中输入 `debug`
-   ，即输入 `java -jar bili-download-1.3.5-jar-with-dependencies.jar debug`，这将显示一些调试信息。若仅需从 URL 下载文件，请在参数中输入 `direct "<url>" "<path>"`，如输入 `java -jar bili-download-1.3.5-jar-with-dependencies.jar direct "http://upos-sz-mirrorkodo.bilivideo.com/upgcxcode/90/37/315703790/315703790-1-30336.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEuENvNC8aNEVEtEvE9IMvXBvE2ENvNCImNEVEIj0Y2J_aug859r1qXg8gNEVE5XREto8z5JZC2X2gkX5L5F1eTX1jkXlsTXHeux_f2o859IB_&ua=tvproj&uipk=5&nbs=1&deadline=1622289611&gen=playurlv2&os=kodobv&oi=2078815810&trid=b7708dc7ef174e5bbe4fba32f5418517t&upsig=29cbb17759b52b6499638195bf0861aa&uparams=e,ua,uipk,nbs,deadline,gen,os,oi,trid&mid=474403243&bvc=vod&orderid=0,1&logo=80000000" "D:\BiliDownload\快住手！这根本不是 Kawaii Bass！_ 恋のうた Remix 工程演示.mp4"`，程序会在下载完成之后直接退出。
+   ，即输入 `java -jar bili-download-1.3.5-jar-with-dependencies.jar debug`，这将显示一些调试信息。若仅需从 URL
+   下载文件，请在参数中输入 `direct "<url>" "<path>"`
+   ，如输入：
+   ```
+   java -jar bili-download-1.3.5-jar-with-dependencies.jar direct "http://upos-sz-mirrorkodo.bilivideo.com/upgcxcode/90/37/315703790/315703790-1-30336.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEuENvNC8aNEVEtEvE9IMvXBvE2ENvNCImNEVEIj0Y2J_aug859r1qXg8gNEVE5XREto8z5JZC2X2gkX5L5F1eTX1jkXlsTXHeux_f2o859IB_&ua=tvproj&uipk=5&nbs=1&deadline=1622289611&gen=playurlv2&os=kodobv&oi=2078815810&trid=b7708dc7ef174e5bbe4fba32f5418517t&upsig=29cbb17759b52b6499638195bf0861aa&uparams=e,ua,uipk,nbs,deadline,gen,os,oi,trid&mid=474403243&bvc=vod&orderid=0,1&logo=80000000" "D:\BiliDownload\快住手！这根本不是 Kawaii Bass！_ 恋のうた Remix 工程演示.mp4"
+   ```
+   程序会在下载完成之后直接退出。
 
 3. 输入一个 AV 号或 BV 号。
 
@@ -120,11 +126,11 @@
 
 ### 1. 添加了下载重试功能
 
-当10s内平均速度达到零时，程序会中断下载并重试。
+当 10s 内平均速度达到零时，程序会中断下载并重试。
 
 ### 2. 详细了速度信息
 
-之前的 `速度` 更名为 `平均速度`；添加了 `瞬时速度`，指0.5s内的平均速度。
+之前的 `速度` 更名为 `平均速度`；添加了 `瞬时速度`，指 0.5s 内的平均速度。
 
 ### 3. 添加了直接下载功能
 
@@ -140,7 +146,8 @@
 
 ### 1. 在二维码中添加了 LOGO
 
-在生成 WEB 端二维码时会在其中心添加 `resources` 中的 `logo-super-ellipse-resized.png` 图片，在生成 TV 端二维码时会在其中心添加 `logo-super-ellipse-2-resized.png` 图片。
+在生成 WEB 端二维码时会在其中心添加 `resources` 中的 `logo-super-ellipse-resized.png` 图片，在生成 TV
+端二维码时会在其中心添加 `logo-super-ellipse-2-resized.png` 图片。
 
 ### 2. 自定义化了多线程下载所用线程数
 
