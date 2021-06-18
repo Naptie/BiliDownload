@@ -46,6 +46,7 @@ public class Main {
 		Object[] specified = specify(info);
 		Object[] details = getResolutions(info, login, !login[1].isEmpty(), (int) specified[0]);
 		String[] path = getPath((String) specified[1]);
+		path[1] += " [" + details[4] + "]";
 		download(details, path);
 		System.out.println("\n程序运行结束；总运行时间：" + getFormattedTime(System.currentTimeMillis() - beginTime));
 		System.exit(0);
@@ -302,7 +303,7 @@ public class Main {
 				videoDownloadUrl = getVideoDownload(videoWeb, 0);
 			}
 		}
-		return new Object[]{videoDownloadUrl, qualities, quality, videoWeb};
+		return new Object[]{videoDownloadUrl, qualities, quality, videoWeb, qualities.getString(quality).replaceAll(" +", " ")};
 	}
 
 	private static String[] getPath(String name) throws IOException {
@@ -420,6 +421,7 @@ public class Main {
 				System.out.println("\n正在下载视频至 " + video.getAbsolutePath());
 				long lenVid = downloadFromUrl(videoDownloadUrl, video.getAbsolutePath());
 				videoSuccess = video.length() == lenVid;
+//				System.out.println(video.length() + " == " + lenVid); // debug
 				System.out.println(videoSuccess ? "\n视频下载完毕" : "\n视频下载失败");
 				System.out.println("\n正在下载音频至 " + audio.getAbsolutePath());
 				long lenAud = downloadFromUrl(audioDownloadUrl, audio.getAbsolutePath());
@@ -590,7 +592,7 @@ public class Main {
 		double remainingSize = remainingSizeLen / 1024.0 / 1024.0;
 		System.out.println("\n剩余文件大小：" + String.format("%,.3f", remainingSize) + (debug ? "MB（" + remainingSizeLen + "B）" : "MB"));
 		System.out.println("下载所用线程数：" + threadAmount);
-		System.out.println("本次是第" + tries + "次重试，若数次下载失败请考虑强制退出程序");
+		System.out.println("本次是第" + tries + "次重试" + (tries > 3 ? "，若数次下载失败请考虑强制退出程序" : ""));
 		long beginTime = System.currentTimeMillis();
 		short result = downloader.download();
 		if (result == -1) {
@@ -627,10 +629,11 @@ public class Main {
 				prevLensInTenSec.removeFirst();
 				if (speed == 0) {
 					System.out.println("\n下载中断，已下载 " + String.format("%,.3f", downloaded) + (debug ? "MB（" + downloadedLen + "B）" : "MB") + "；正在尝试继续下载");
+//					System.out.println(downloadedLen + " != " + remainingSizeLen); // debug
 					return downloadedLen + downloadFromUrl(address, path, downloader.cancel(), tries + 1);
 				}
 			}
-			if (time > 500) {
+			if (time > 500 && prevLensInHalfSec.size() > 0) {
 				prevLensInHalfSec.removeFirst();
 			}
 
@@ -731,6 +734,7 @@ public class Main {
 			prevLensInTenSec.addLast(downloadedLen);
 			prevLensInHalfSec.addLast(downloadedLen);
 			speed = (time / 1000 == 0) ? 0 : (time > 10000 ? downloaded - (prevLensInTenSec.getFirst() / 1024.0 / 1024.0) : downloaded) / (time > 10000 ? 10 : time / 1000.0);
+//			System.out.println("prevLensInHalfSec: " + prevLensInHalfSec.size() + ", first = " + prevLensInHalfSec.getFirst() + ", last = " + prevLensInHalfSec.getLast());
 //			System.out.print("Speed = " + (time > 10000 ? downloaded - (prevLensInTenSec.getFirst() / 1024.0 / 1024.0) : downloaded) + " / " + (time > 10000 ? 10 : time / 1000.0) + " = " + speed);
 			instantaneousSpeed = (time / 100 == 0) ? 0 : (time > 500 ? downloaded - (prevLensInHalfSec.getFirst() / 1024.0 / 1024.0) : downloaded) / (time > 500 ? 0.5 : time / 1000.0);
 //			System.out.println(" Instantaneous Speed = (" + downloaded + " - " + (prevLensInHalfSec.getFirst() / 1024.0 / 1024.0) + ") / " + (time > 500 ? 0.5 : time / 1000.0) + " = " + instantaneousSpeed);
@@ -773,6 +777,7 @@ public class Main {
 		for (Map.Entry<Long, Long> entry : status) {
 			toDownload += entry.getValue() - entry.getKey();
 		}
+//		System.out.println("Calculated remainingSize: " + toDownload); // debug
 		return toDownload;
 	}
 

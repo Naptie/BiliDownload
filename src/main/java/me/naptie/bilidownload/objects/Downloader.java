@@ -36,6 +36,15 @@ public class Downloader {
 		this.status = status;
 	}
 
+	public boolean isFinished() {
+		for (int i = 0; i < THREAD_AMOUNT; i++) {
+			if (!THREADS.get(i).isFinished()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public List<Map.Entry<Long, Long>> cancel() {
 		List<Map.Entry<Long, Long>> status = new ArrayList<>();
 		for (int i = 0; i < THREAD_AMOUNT; i++) {
