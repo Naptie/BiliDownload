@@ -224,11 +224,11 @@ public class Main {
 		System.out.println("\n标题：" + info.getString("title"));
 		System.out.println("UP主：" + info.getJSONObject("owner").getString("name"));
 		System.out.println("时长：" + getFormattedTime(info.getIntValue("duration"), info.getIntValue("duration") > 3600));
-		System.out.println("播放数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("view")));
-		System.out.println("弹幕数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("danmaku")));
-		System.out.println("获赞数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("like")));
-		System.out.println("投币数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("coin")));
-		System.out.println("收藏数：" + String.format("%,d", info.getJSONObject("stat").getIntValue("favorite")));
+		System.out.println("播放：" + String.format("%,d", info.getJSONObject("stat").getIntValue("view")));
+		System.out.println("弹幕：" + String.format("%,d", info.getJSONObject("stat").getIntValue("danmaku")));
+		System.out.println("获赞：" + String.format("%,d", info.getJSONObject("stat").getIntValue("like")));
+		System.out.println("投币：" + String.format("%,d", info.getJSONObject("stat").getIntValue("coin")));
+		System.out.println("收藏：" + String.format("%,d", info.getJSONObject("stat").getIntValue("favorite")));
 		return info;
 	}
 
