@@ -67,11 +67,11 @@ public class SignUtil {
 		try {
 			result = URLEncoder.encode(s, "UTF-8")
 					.replaceAll("\\+", "%20")
-					.replaceAll("\\%21", "!")
-					.replaceAll("\\%27", "'")
-					.replaceAll("\\%28", "(")
-					.replaceAll("\\%29", ")")
-					.replaceAll("\\%7E", "~");
+					.replaceAll("%21", "!")
+					.replaceAll("%27", "'")
+					.replaceAll("%28", "(")
+					.replaceAll("%29", ")")
+					.replaceAll("%7E", "~");
 		}
 		// This exception should never occur.
 		catch (UnsupportedEncodingException e) {
