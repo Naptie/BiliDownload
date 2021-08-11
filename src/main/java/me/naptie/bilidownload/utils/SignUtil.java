@@ -17,7 +17,6 @@ public class SignUtil {
 		put("37207f2beaebf8d7", "e988e794d4d4b6dd43bc0e89d6e90c43"); // 安卓	biliLink
 		put("4409e2ce8ffd12b8", "59b43e04ad6965f34319062b478f83dd"); // TV	客户端
 		put("57263273bc6b67f6", "a0488e488d1567960d3a765e8d129f90"); // 安卓	客户端
-		put("5dce947fe22167f9", ""); // 安卓	必剪
 		put("7d336ec01856996b", "a1ce6983bc89e20a36c37f40c4f1a0dd"); // 安卓	概念版
 		put("85eb6835b0a1034e", "2ad42749773c441109bdc0191257a664"); // 未知
 		put("8e16697a1b4f8121", "f5dd03b752426f2e623d7badb28d190a"); // 安卓	国际版
@@ -25,8 +24,6 @@ public class SignUtil {
 		put("ae57252b0c09105d", "c75875c596a69eb55bd119e74b07cfe3"); // 安卓	国际版
 		put("bb3101000e232e27", "36efcfed79309338ced0380abd824ac1"); // 安卓	国际版
 		put("bca7e84c2d947ac6", "60698ba2f68e01ce44738920a0ffe768"); // 安卓	客户端	登录专用
-		put("cc578d267072c94d", ""); // 安卓	轻视频
-		put("cc8617fd6961e070", ""); // 安卓	漫画
 		put("iVGUTjsxvpLeuDCf", "aHRmhWMLkdeMuILqORnYZocwMBpMEOdt"); // 安卓	客户端	取流专用
 	}};
 
