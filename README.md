@@ -48,12 +48,12 @@
 
 1. **[可跳过]** 使用 `mvn clean package` 命令进行编译。
 
-2. 输入 `java -jar bili-download-1.3.5-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中输入 `debug`
-   ，即输入 `java -jar bili-download-1.3.5-jar-with-dependencies.jar debug`，这将显示一些调试信息。若仅需从 URL
+2. 输入 `java -jar bili-download-1.3.6-jar-with-dependencies.jar`，进入程序。若您希望启用 debug 模式，请在参数中输入 `debug`
+   ，即输入 `java -jar bili-download-1.3.6-jar-with-dependencies.jar debug`，这将显示一些调试信息。若仅需从 URL
    下载文件，请在参数中输入 `direct "<url>" "<path>"`
    ，如输入：
    ```
-   java -jar bili-download-1.3.5-jar-with-dependencies.jar direct "http://upos-sz-mirrorkodo.bilivideo.com/upgcxcode/90/37/315703790/315703790-1-30336.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEuENvNC8aNEVEtEvE9IMvXBvE2ENvNCImNEVEIj0Y2J_aug859r1qXg8gNEVE5XREto8z5JZC2X2gkX5L5F1eTX1jkXlsTXHeux_f2o859IB_&ua=tvproj&uipk=5&nbs=1&deadline=1622289611&gen=playurlv2&os=kodobv&oi=2078815810&trid=b7708dc7ef174e5bbe4fba32f5418517t&upsig=29cbb17759b52b6499638195bf0861aa&uparams=e,ua,uipk,nbs,deadline,gen,os,oi,trid&mid=474403243&bvc=vod&orderid=0,1&logo=80000000" "D:\BiliDownload\快住手！这根本不是 Kawaii Bass！_ 恋のうた Remix 工程演示.mp4"
+   java -jar bili-download-1.3.6-jar-with-dependencies.jar direct "http://upos-sz-mirrorkodo.bilivideo.com/upgcxcode/90/37/315703790/315703790-1-30336.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEuENvNC8aNEVEtEvE9IMvXBvE2ENvNCImNEVEIj0Y2J_aug859r1qXg8gNEVE5XREto8z5JZC2X2gkX5L5F1eTX1jkXlsTXHeux_f2o859IB_&ua=tvproj&uipk=5&nbs=1&deadline=1622289611&gen=playurlv2&os=kodobv&oi=2078815810&trid=b7708dc7ef174e5bbe4fba32f5418517t&upsig=29cbb17759b52b6499638195bf0861aa&uparams=e,ua,uipk,nbs,deadline,gen,os,oi,trid&mid=474403243&bvc=vod&orderid=0,1&logo=80000000" "D:\BiliDownload\快住手！这根本不是 Kawaii Bass！_ 恋のうた Remix 工程演示.mp4"
    ```
    程序会在下载完成之后直接退出。
 
@@ -116,11 +116,23 @@
 
 9. **[BUG]** 在调用 FFmpeg 合并时，文件大小达到一定值（4GB左右）将不再写入。
 
-10. 本程序仍然存在诸多问题，欢迎大家多多投递 issue 与 pull request。
+10. **[BUG]** 获取无水印源时有时会失败。
+
+11. 本程序仍然存在诸多问题，欢迎大家多多投递 issue 与 pull request。
 
 ---
 
 # ChangeLog
+
+## 1.3.6
+
+### 1. 添加了路径开头“~”的解析功能
+
+当路径以“~”开头时，会自动将其替换为用户主目录。
+
+### 2. 解决了 Linux / MacOS 上 FFmpeg 可执行文件的名称问题
+
+在 Linux / MacOS 等平台上，可执行文件名一般不含 `.exe`。
 
 ## 1.3.5
 

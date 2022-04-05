@@ -34,6 +34,9 @@ public class HttpManager {
 			request.setRequestMethod("POST");
 		}
 		request.connect();
+		if (request.getResponseCode() != 200) {
+			throw new IOException("服务器返回状态码 " + request.getResponseCode());
+		}
 		return request;
 	}
 

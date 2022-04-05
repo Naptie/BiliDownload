@@ -6,7 +6,7 @@
 
 	<groupId>me.naptie</groupId>
 	<artifactId>bili-download</artifactId>
-	<version>1.3.5</version>
+	<version>1.3.6</version>
 	<build>
 		<plugins>
 			<plugin>

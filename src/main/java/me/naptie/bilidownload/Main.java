@@ -326,7 +326,15 @@ public class Main {
 		while (!pathSuccess) {
 			if (hint) System.out.println("\n请输入保存路径：");
 			savePath = input();
-			File file = new File(savePath);
+			File file;
+			if (savePath.startsWith("~")) {
+				String userHomeDir = Paths.get(System.getProperty("user.home")).toAbsolutePath().toString();
+				if (debug) System.out.println("检测到路径以“~”开头，已找到用户主目录：" + userHomeDir);
+				file = new File(userHomeDir, savePath.substring(1));
+				savePath = file.getAbsolutePath();
+			} else {
+				file = new File(savePath);
+			}
 			if (!file.exists()) {
 				if (hint) System.out.println("该目录不存在，请决定是否创建该目录（输入“Y”代表是，输入“N”代表否）：");
 				if (input().equalsIgnoreCase("Y")) {
@@ -386,14 +394,15 @@ public class Main {
 					}
 				}
 				while (ffmpegSuccess == 0) {
-					if (hint) System.out.println("\n请输入 ffmpeg.exe 目录（跳过合并请填“#”）：");
+
+					if (hint) System.out.println("\n请输入 ffmpeg(.exe) 的绝对路径（跳过合并请填“#”）：");
 					String ffmpegPath = input();
 					if (ffmpegPath.equals("#")) {
 						ffmpegSuccess = -1;
 						break;
 					}
-					ffmpeg = ffmpegPath.endsWith("ffmpeg.exe") ? new File(ffmpegPath) : new File(ffmpegPath, "ffmpeg.exe");
-					ffmpegSuccess = ffmpeg.exists() ? 1 : 0;
+					ffmpeg = (ffmpegPath.endsWith("ffmpeg.exe") || (!System.getProperty("os.name").toLowerCase().contains("windows") && ffmpegPath.endsWith("ffmpeg"))) ? new File(ffmpegPath) : new File(ffmpegPath, System.getProperty("os.name").toLowerCase().contains("windows") ? "ffmpeg.exe" : "ffmpeg");
+					ffmpegSuccess = ffmpeg.exists() && !ffmpeg.isDirectory() ? 1 : 0;
 					if (ffmpegSuccess == 1) {
 						if (hint) System.out.println("请决定是否保存 FFmpeg 路径（输入“Y”代表是，输入“N”代表否）：");
 						if (input().equalsIgnoreCase("Y")) {
@@ -408,7 +417,7 @@ public class Main {
 						}
 					}
 					if (ffmpegSuccess == 0) {
-						System.out.println("该目录不存在 ffmpeg.exe");
+						System.out.println("无法找到 ffmpeg(.exe)");
 					}
 				}
 				boolean videoSuccess, audioSuccess;
