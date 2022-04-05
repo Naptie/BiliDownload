@@ -122,11 +122,11 @@
 
 ## 1.3.6
 
-### 1. 添加了路径开头“~”的解析功能 #6
+### 1. 添加了路径开头“~”的解析功能 [#6](https://github.com/Naptie/BiliDownload/issues/6)
 
 当路径以“~”开头时，会自动将其替换为用户主目录。
 
-### 2. 解决了 Linux / MacOS 上 FFmpeg 可执行文件的名称问题 #7
+### 2. 解决了 Linux / MacOS 上 FFmpeg 可执行文件的名称问题 [#7](https://github.com/Naptie/BiliDownload/issues/7)
 
 在 Linux / MacOS 等平台上，可执行文件名一般不含 `.exe`。
 
